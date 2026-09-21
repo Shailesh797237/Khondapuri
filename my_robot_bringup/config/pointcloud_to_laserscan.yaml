@@ -1,0 +1,69 @@
+# ================================================================
+#  PointCloud2 → LaserScan Conversion Config
+#
+#  Used by dual_mapping_launch.py to convert Livox MID-360's
+#  3D point cloud into a 2D laser scan for slam_toolbox.
+#
+#  The converter extracts a horizontal slice from the point cloud
+#  at a configurable height range. Points within this height band
+#  are projected onto a 2D plane to form a LaserScan message.
+#
+#  Height range is relative to the target_frame (base_link):
+#    min_height → max_height defines the "ground level" slice
+#    that represents walls, obstacles, etc. for 2D navigation.
+#
+#  ⚠ TUNE min_height and max_height based on your robot's
+#    LiDAR mounting height and the environment!
+# ================================================================
+
+pointcloud_to_laserscan:
+  ros__parameters:
+
+    # ── Target Frame ────────────────────────────────────────────
+    # Transform the point cloud into this frame before slicing.
+    # Using base_link makes height values relative to the robot base.
+    target_frame: "base_link"
+
+    # ── Transform Tolerance ─────────────────────────────────────
+    # Maximum time to wait for TF transform (seconds)
+    transform_tolerance: 0.01
+
+    # ── Height Filtering (meters, relative to target_frame) ─────
+    # Only points within [min_height, max_height] are included
+    # in the output LaserScan.
+    #
+    # For a ground robot with LiDAR at ~0.2m above base_link:
+    #   min_height: -0.1  → include slightly below base_link
+    #                        (handles uneven ground)
+    #   max_height:  1.0  → include up to 1m above base_link
+    #                        (captures walls, shelves, obstacles)
+    #
+    # Increase max_height to detect taller objects.
+    # Decrease min_height to detect ground-level obstacles.
+    min_height: -0.1
+    max_height: 1.0
+
+    # ── Angular Range ───────────────────────────────────────────
+    # MID-360 has 360° horizontal FOV
+    angle_min: -3.14159265    # -180° (radians)
+    angle_max:  3.14159265    #  180° (radians)
+    angle_increment: 0.00436332  # ~0.25° resolution (720 points per scan)
+
+    # ── Scan Time ───────────────────────────────────────────────
+    # Time between scans (for LaserScan header)
+    scan_time: 0.1            # 10 Hz output rate
+
+    # ── Range Limits ────────────────────────────────────────────
+    # Match the FAST-LIO2 / slam_toolbox range settings
+    range_min: 0.5            # ignore points closer than 0.5m (same as FAST-LIO2 blind)
+    range_max: 40.0           # max detection range (same as FAST-LIO2 det_range)
+
+    # ── Inf Handling ────────────────────────────────────────────
+    # If true, rays with no return are set to +inf instead of range_max.
+    # slam_toolbox handles inf values properly.
+    use_inf: true
+
+    # ── Concurrency ─────────────────────────────────────────────
+    # Number of threads for point cloud processing
+    # Set to 0 to use all available cores
+    concurrency_level: 1

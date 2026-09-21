@@ -1,0 +1,8 @@
+waypoints:
+
+- x:           3.98
+  y:           0.11
+  theta:       0.15
+  type:        station
+  mission:     forward
+  rotation:    auto

@@ -1,0 +1,52 @@
+<launch>
+
+  <let name="urdf_path"
+       value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro"/>
+
+  <let name="rviz_config_path"
+       value="$(find-pkg-share my_robot_description)/rviz/urdf_config.rviz"/>
+
+  <let name="gazebo_config_path"
+       value="$(find-pkg-share my_robot_bringup)/config/gz_bridge.yaml"/>
+
+  <!-- Robot State Publisher -->
+  <node pkg="robot_state_publisher" exec="robot_state_publisher" output="screen">
+    <param name="robot_description"
+           value="$(command 'xacro $(var urdf_path)')"/>
+  </node>
+
+  <!-- Gazebo -->
+  <include file="$(find-pkg-share ros_gz_sim)/launch/gz_sim.launch.py">
+        <arg name="gz_args" value="empty.sdf -r" />
+  </include>
+
+  <!-- Spawn Robot -->
+  <node pkg="ros_gz_sim" exec="create"
+        args="-name my_robot -topic robot_description" />
+
+  <!-- Bridge -->
+  <node pkg="ros_gz_bridge" exec="parameter_bridge">
+      <param name="config_file" value="$(var gazebo_config_path)" />
+  </node>
+
+  <!-- ros2_control -->
+  <node pkg="controller_manager" exec="ros2_control_node" output="screen">
+  <param name="robot_description"
+         value="$(command 'xacro $(var urdf_path)')"/>
+  <param from="$(find-pkg-share my_robot_bringup)/config/my_robot_controllers.yaml"/>
+  </node>
+
+  <!-- Controllers -->
+  <node pkg="controller_manager" exec="spawner"
+        args="joint_state_broadcaster --controller-manager /controller_manager"
+        output="screen"/>
+
+  <node pkg="controller_manager" exec="spawner"
+        args="diff_drive_controller --controller-manager /controller_manager"
+        output="screen"/>
+
+  <!-- RViz -->
+  <node pkg="rviz2" exec="rviz2"
+        args="-d $(var rviz_config_path)" output="screen"/>
+
+</launch>

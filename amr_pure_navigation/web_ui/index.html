@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMR Mission Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #f0f7ff;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #e8f2ff;
+      --bg-stat: #f0f7ff;
+      --border: #d0dfef;
+      --text-primary: #1a2940;
+      --text-secondary: #4a5e78;
+      --text-muted: #8498b5;
+      --accent-blue: #2563eb;
+      --accent-cyan: #0891b2;
+      --accent-green: #059669;
+      --accent-red: #dc2626;
+      --accent-orange: #d97706;
+      --accent-purple: #7c3aed;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* ── Header ────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #1e40af 0%, #0891b2 100%);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(30, 64, 175, 0.25);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 38px;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .header h1 span {
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .connection-status.connected {
+      background: rgba(255, 255, 255, 0.2);
+      color: #a7f3d0;
+      border: 1px solid rgba(167, 243, 208, 0.4);
+    }
+
+    .connection-status.disconnected {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(252, 165, 165, 0.4);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .connected .status-dot {
+      background: #34d399;
+    }
+
+    .disconnected .status-dot {
+      background: #f87171;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+      }
+    }
+
+    /* ── Main Grid ─────────────────────────────── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: calc(100vh - 66px);
+    }
+
+    /* ── Sidebar ───────────────────────────────── */
+    .sidebar {
+      grid-row: 1 / -1;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .mission-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .mission-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mission-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: transparent;
+      border-radius: 10px 0 0 10px;
+      transition: background 0.2s;
+    }
+
+    .mission-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-md);
+    }
+
+    .mission-card.selected {
+      background: #e0edff;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .mission-card.selected::before {
+      background: var(--accent-blue);
+    }
+
+    .mission-card .mission-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .mission-card .mission-info {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 10px;
+    }
+
+    .mission-card .mission-info span {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* ── Control Panel ──────────────────────────── */
+    .control-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .control-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-start {
+      background: var(--accent-green);
+      color: white;
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    }
+
+    .btn-start:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+    }
+
+    .btn-stop {
+      background: var(--accent-red);
+      color: white;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-stop:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+    }
+
+    .btn-loop {
+      background: var(--accent-purple);
+      color: white;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-loop:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+    }
+
+    .cycles-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .cycles-input label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .cycles-input input {
+      width: 70px;
+      padding: 7px 10px;
+      background: var(--bg-stat);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .cycles-input input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* ── Content Area ──────────────────────────── */
+    .content-area {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    /* ── Nav Status Bar ──────────────────────────── */
+    .nav-status-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-status-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-status-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent-blue);
+    }
+
+    .nav-status-details {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-detail {
+      text-align: center;
+    }
+
+    .nav-detail .val {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .nav-detail .lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Motor Panels ───────────────────────────── */
+    .motor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .motor-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .motor-panel::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .motor-panel.left::after {
+      background: linear-gradient(90deg, #2563eb, #0891b2);
+    }
+
+    .motor-panel.right::after {
+      background: linear-gradient(90deg, #7c3aed, #2563eb);
+    }
+
+    .motor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .motor-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .motor-error-badge {
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .motor-error-badge.ok {
+      background: #d1fae5;
+      color: var(--accent-green);
+    }
+
+    .motor-error-badge.error {
+      background: #fee2e2;
+      color: var(--accent-red);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .motor-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .motor-stat {
+      background: var(--bg-stat);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #e2ecf5;
+    }
+
+    .motor-stat .value {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .motor-stat .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .motor-stat.velocity .value {
+      color: var(--accent-cyan);
+    }
+
+    .motor-stat.target .value {
+      color: var(--accent-blue);
+    }
+
+    .motor-stat.current .value {
+      color: var(--accent-orange);
+    }
+
+    .motor-stat.temp .value {
+      color: var(--accent-green);
+    }
+
+    /* ── Odometry ──────────────────────────────── */
+    .odom-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .odom-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .odom-stat {
+      background: var(--bg-stat);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #e2ecf5;
+    }
+
+    .odom-stat .value {
+      font-size: 18px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent-blue);
+    }
+
+    .odom-stat .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    /* ── Log ──────────────────────────────────── */
+    .log-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .log-entries {
+      max-height: 180px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .log-entry {
+      padding: 5px 8px;
+      border-bottom: 1px solid #edf2f7;
+      display: flex;
+      gap: 10px;
+    }
+
+    .log-entry .time {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .log-entry .msg {
+      color: var(--text-secondary);
+    }
+
+    /* ── Responsive ─────────────────────────────── */
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .motor-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .odom-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* ── IP Connection Bar ──────────────────────── */
+    .ip-bar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .ip-bar label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .ip-bar input {
+      width: 200px;
+      padding: 8px 12px;
+      background: var(--bg-stat);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+    }
+
+    .ip-bar input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-connect {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--accent-blue);
+      color: white;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-connect:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-connect.disconnect {
+      background: var(--accent-red);
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+    }
+
+    .btn-connect.disconnect:hover {
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+    }
+
+    .ip-status {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .ip-status.live {
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">🤖</div>
+      <h1>AMR Mission Control <span>| Dashboard</span></h1>
+    </div>
+    <div id="connectionStatus" class="connection-status disconnected">
+      <div class="status-dot"></div>
+      <span>Disconnected</span>
+    </div>
+  </div>
+
+  <!-- ═══════════ IP ADDRESS BAR ═══════════ -->
+  <div class="ip-bar">
+    <label>🌐 Robot IP:</label>
+    <input type="text" id="robotIpInput" placeholder="e.g. 192.168.1.100" />
+    <label style="color:var(--text-muted)">:</label>
+    <input type="number" id="robotPortInput" value="9090" style="width:80px;" />
+    <button class="btn-connect" id="btnConnect" onclick="toggleConnection()">🔗 Connect</button>
+    <span class="ip-status" id="ipStatus">Enter robot IP and click Connect</span>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- ═══════════ SIDEBAR ═══════════ -->
+    <div class="sidebar">
+      <div>
+        <div class="section-title">Select Mission</div>
+        <p style="font-size:11px; color: var(--text-muted); margin-top:4px;">
+          Click a mission below, then press Start
+        </p>
+      </div>
+
+      <div class="mission-list" id="missionList"></div>
+
+      <div class="control-panel">
+        <div class="section-title">Navigation Control</div>
+        <div class="cycles-input">
+          <label>Cycles:</label>
+          <input type="number" id="cyclesInput" value="1" min="1" max="100">
+        </div>
+        <div class="control-buttons">
+          <button class="btn btn-start" onclick="startMission()">▶ Start</button>
+          <button class="btn btn-stop" onclick="stopMission()">■ Stop</button>
+        </div>
+        <div class="control-buttons" style="margin-top:6px;">
+          <button class="btn btn-loop" onclick="loopForever()">🔁 Loop ∞</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ CONTENT ═══════════ -->
+    <div class="content-area">
+
+      <div class="nav-status-bar">
+        <div>
+          <div class="nav-status-label">Navigation Status</div>
+          <div class="nav-status-value" id="navStatusText">Waiting for connection...</div>
+        </div>
+        <div class="nav-status-details">
+          <div class="nav-detail">
+            <div class="val" id="wpIndex" style="color:#2563eb;">--</div>
+            <div class="lbl">Waypoint</div>
+          </div>
+          <div class="nav-detail">
+            <div class="val" id="cyclesDone" style="color:#059669;">--</div>
+            <div class="lbl">Cycles Done</div>
+          </div>
+          <div class="nav-detail">
+            <div class="val" id="navState" style="color:#d97706;">--</div>
+            <div class="lbl">State</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="motor-grid">
+        <div class="motor-panel left">
+          <div class="motor-header">
+            <div class="motor-title">⚙ Left Motor (Slave 1)</div>
+            <div id="leftErrorBadge" class="motor-error-badge ok">OK</div>
+          </div>
+          <div class="motor-stats">
+            <div class="motor-stat velocity">
+              <div class="value" id="leftVel">--</div>
+              <div class="label">Actual Vel</div>
+            </div>
+            <div class="motor-stat target">
+              <div class="value" id="leftTgt">--</div>
+              <div class="label">Target Vel</div>
+            </div>
+            <div class="motor-stat current">
+              <div class="value" id="leftCurr">--</div>
+              <div class="label">Current (mA)</div>
+            </div>
+            <div class="motor-stat temp">
+              <div class="value" id="leftTemp">--</div>
+              <div class="label">Temp (°C)</div>
+            </div>
+          </div>
+        </div>
+        <div class="motor-panel right">
+          <div class="motor-header">
+            <div class="motor-title">⚙ Right Motor (Slave 2)</div>
+            <div id="rightErrorBadge" class="motor-error-badge ok">OK</div>
+          </div>
+          <div class="motor-stats">
+            <div class="motor-stat velocity">
+              <div class="value" id="rightVel">--</div>
+              <div class="label">Actual Vel</div>
+            </div>
+            <div class="motor-stat target">
+              <div class="value" id="rightTgt">--</div>
+              <div class="label">Target Vel</div>
+            </div>
+            <div class="motor-stat current">
+              <div class="value" id="rightCurr">--</div>
+              <div class="label">Current (mA)</div>
+            </div>
+            <div class="motor-stat temp">
+              <div class="value" id="rightTemp">--</div>
+              <div class="label">Temp (°C)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="odom-panel">
+        <div class="section-title">Robot Pose & Velocity</div>
+        <div class="odom-grid">
+          <div class="odom-stat">
+            <div class="value" id="odomX">--</div>
+            <div class="label">X (m)</div>
+          </div>
+          <div class="odom-stat">
+            <div class="value" id="odomY">--</div>
+            <div class="label">Y (m)</div>
+          </div>
+          <div class="odom-stat">
+            <div class="value" id="odomYaw">--</div>
+            <div class="label">Yaw (°)</div>
+          </div>
+          <div class="odom-stat">
+            <div class="value" id="odomLinVel">--</div>
+            <div class="label">Lin Vel (m/s)</div>
+          </div>
+          <div class="odom-stat">
+            <div class="value" id="odomAngVel">--</div>
+            <div class="label">Ang Vel (rad/s)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="log-panel">
+        <div class="section-title">Activity Log</div>
+        <div class="log-entries" id="logEntries">
+          <div class="log-entry">
+            <span class="time">--:--:--</span>
+            <span class="msg">Waiting for ROS bridge connection...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+
+  <script>
+    // ╔══════════════════════════════════════════════════════════════╗
+    // ║                                                              ║
+    // ║   ★★★  MISSION CONFIGURATION — EDIT YOUR MISSIONS HERE  ★★★  ║
+    // ║                                                              ║
+    // ║   Each mission has:                                          ║
+    // ║     name      → Display name in UI                           ║
+    // ║     file      → YAML filename in config/ folder              ║
+    // ║     waypoints → Number of waypoints (for display)            ║
+    // ║     type      → 'forward', 'reverse', or 'mixed'            ║
+    // ║                                                              ║
+    // ║   To add a new mission:                                      ║
+    // ║     1. Create a new YAML file in config/ folder              ║
+    // ║     2. Add an entry below                                    ║
+    // ║     3. When you select & start, it publishes to /set_cycles  ║
+    // ║                                                              ║
+    // ╚══════════════════════════════════════════════════════════════╝
+
+    let MISSIONS = [];
+    let missionTopic = null;
+
+    function subscribeMissions() {
+      if (!ros || !connected) return;
+      
+      if (missionTopic) { missionTopic.unsubscribe(); }
+
+      missionTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: '/available_missions',
+        messageType: 'std_msgs/msg/String',
+        queue_size: 1,
+        // Match the Transient Local durability if possible, 
+        // though roslibjs handles the latest message fine.
+      });
+
+      missionTopic.subscribe(msg => {
+        try {
+          const data = JSON.parse(msg.data);
+          if (JSON.stringify(data) !== JSON.stringify(MISSIONS)) {
+            MISSIONS = data;
+            populateMissions();
+            addLog(`🔄 Mission list updated (${MISSIONS.length} tracks)`);
+          }
+        } catch (e) {
+          console.error("Failed to parse mission JSON:", e);
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CONNECTION CONFIG — Uses IP from the input bar above
+    // ═══════════════════════════════════════════════════════════════
+    const WAYPOINTS_DIR = '/home/taikisha/ekf_ws/src/amr_pure_navigation/config/';
+
+    let selectedMission = 0;
+    let ros = null;
+    let connected = false;
+    let autoReconnect = false;
+
+    // Load saved IP from localStorage
+    (function loadSavedIP() {
+      const savedIP = localStorage.getItem('amr_robot_ip') || '';
+      const savedPort = localStorage.getItem('amr_robot_port') || '9090';
+      document.addEventListener('DOMContentLoaded', () => {
+        if (savedIP) document.getElementById('robotIpInput').value = savedIP;
+        document.getElementById('robotPortInput').value = savedPort;
+      });
+    })();
+
+    function getRosbridgeURL() {
+      const ip = document.getElementById('robotIpInput').value.trim();
+      const port = document.getElementById('robotPortInput').value.trim() || '9090';
+      if (!ip) return null;
+      return `ws://${ip}:${port}`;
+    }
+
+    // ── Populate missions ─────────────────────────────────────────
+    function populateMissions() {
+      const list = document.getElementById('missionList');
+      list.innerHTML = '';
+      MISSIONS.forEach((m, i) => {
+        const card = document.createElement('div');
+        card.className = 'mission-card' + (i === selectedMission ? ' selected' : '');
+        card.onclick = () => selectMission(i);
+        card.innerHTML = `
+      <div class="mission-name">${m.name}</div>
+      <div class="mission-info">
+        <span>📁 ${m.file}</span>
+        <span>📍 ${m.waypoints} WPs</span>
+        <span>🏷️ ${m.type}</span>
+      </div>
+    `;
+        list.appendChild(card);
+      });
+    }
+
+    function selectMission(index) {
+      selectedMission = index;
+      populateMissions();
+      addLog(`Selected mission: ${MISSIONS[index].name} (${MISSIONS[index].file})`);
+    }
+
+    // ── ROS Connection ────────────────────────────────────────────
+    function toggleConnection() {
+      if (connected) {
+        disconnectROS();
+      } else {
+        connectROS();
+      }
+    }
+
+    function connectROS() {
+      const url = getRosbridgeURL();
+      if (!url) {
+        addLog('❌ Please enter the robot IP address!');
+        document.getElementById('robotIpInput').focus();
+        return;
+      }
+
+      // Save IP for next time
+      const ip = document.getElementById('robotIpInput').value.trim();
+      const port = document.getElementById('robotPortInput').value.trim();
+      localStorage.setItem('amr_robot_ip', ip);
+      localStorage.setItem('amr_robot_port', port);
+
+      addLog(`📡 Connecting to ${url}...`);
+      document.getElementById('ipStatus').textContent = `Connecting to ${ip}...`;
+      document.getElementById('ipStatus').className = 'ip-status';
+      autoReconnect = true;
+
+      ros = new ROSLIB.Ros({ url: url });
+      ros.on('connection', () => {
+        connected = true;
+        updateConnectionUI(true);
+        document.getElementById('ipStatus').textContent = `Connected to ${ip}`;
+        document.getElementById('ipStatus').className = 'ip-status live';
+        document.getElementById('btnConnect').textContent = '🔌 Disconnect';
+        document.getElementById('btnConnect').className = 'btn-connect disconnect';
+        document.getElementById('robotIpInput').disabled = true;
+        document.getElementById('robotPortInput').disabled = true;
+        addLog(`✅ Connected to robot at ${ip}`);
+        subscribeTopics();
+      });
+      ros.on('error', () => {
+        addLog('❌ ROS connection error');
+        updateConnectionUI(false);
+      });
+      ros.on('close', () => {
+        connected = false;
+        updateConnectionUI(false);
+        document.getElementById('ipStatus').textContent = 'Disconnected';
+        document.getElementById('ipStatus').className = 'ip-status';
+        document.getElementById('btnConnect').textContent = '🔗 Connect';
+        document.getElementById('btnConnect').className = 'btn-connect';
+        document.getElementById('robotIpInput').disabled = false;
+        document.getElementById('robotPortInput').disabled = false;
+        if (autoReconnect) {
+          addLog('🔌 Disconnected — retrying in 3s...');
+          setTimeout(connectROS, 3000);
+        }
+      });
+    }
+
+    function disconnectROS() {
+      autoReconnect = false;
+      if (ros) {
+        ros.close();
+      }
+      connected = false;
+      updateConnectionUI(false);
+      document.getElementById('ipStatus').textContent = 'Disconnected by user';
+      document.getElementById('ipStatus').className = 'ip-status';
+      document.getElementById('btnConnect').textContent = '🔗 Connect';
+      document.getElementById('btnConnect').className = 'btn-connect';
+      document.getElementById('robotIpInput').disabled = false;
+      document.getElementById('robotPortInput').disabled = false;
+      addLog('🛑 Disconnected from robot');
+    }
+
+    function updateConnectionUI(isConnected) {
+      const el = document.getElementById('connectionStatus');
+      if (isConnected) {
+        el.className = 'connection-status connected';
+        el.innerHTML = '<div class="status-dot"></div><span>Connected</span>';
+      } else {
+        el.className = 'connection-status disconnected';
+        el.innerHTML = '<div class="status-dot"></div><span>Disconnected</span>';
+      }
+    }
+
+    // ── Subscribe Topics ──────────────────────────────────────────
+    function subscribeTopics() {
+      new ROSLIB.Topic({ ros, name: '/nav_status', messageType: 'std_msgs/msg/String' })
+        .subscribe(msg => {
+          document.getElementById('navStatusText').textContent = msg.data;
+          parseNavStatus(msg.data);
+        });
+
+      new ROSLIB.Topic({ ros, name: '/moons_motor_diagnostics', messageType: 'std_msgs/msg/String' })
+        .subscribe(msg => parseDiagnostics(msg.data));
+
+      new ROSLIB.Topic({ ros, name: '/odometry/filtered', messageType: 'nav_msgs/msg/Odometry', throttle_rate: 200 })
+        .subscribe(msg => updateOdom(msg));
+
+      subscribeMissions();
+      addLog('📡 Subscribed to all topics');
+    }
+
+    // ── Parse Diagnostics ─────────────────────────────────────────
+    function parseDiagnostics(data) {
+      const parts = data.split(' | ');
+      if (parts.length < 2) return;
+      const left = parseMotorData(parts[0].replace('L:', ''));
+      const right = parseMotorData(parts[1].replace('R:', ''));
+
+      document.getElementById('leftVel').textContent = left.vel;
+      document.getElementById('leftTgt').textContent = left.tgt;
+      document.getElementById('leftCurr').textContent = left.curr;
+      document.getElementById('leftTemp').textContent = left.temp;
+      const lb = document.getElementById('leftErrorBadge');
+      if (parseInt(left.err) !== 0) { lb.className = 'motor-error-badge error'; lb.textContent = 'ERR ' + left.err; }
+      else { lb.className = 'motor-error-badge ok'; lb.textContent = 'OK'; }
+
+      document.getElementById('rightVel').textContent = right.vel;
+      document.getElementById('rightTgt').textContent = right.tgt;
+      document.getElementById('rightCurr').textContent = right.curr;
+      document.getElementById('rightTemp').textContent = right.temp;
+      const rb = document.getElementById('rightErrorBadge');
+      if (parseInt(right.err) !== 0) { rb.className = 'motor-error-badge error'; rb.textContent = 'ERR ' + right.err; }
+      else { rb.className = 'motor-error-badge ok'; rb.textContent = 'OK'; }
+    }
+
+    function parseMotorData(str) {
+      const r = { err: '0', vel: '0', tgt: '0', curr: '0', temp: '0' };
+      str.split(',').forEach(p => { const [k, v] = p.split('='); if (k && v) r[k.trim()] = v.trim(); });
+      return r;
+    }
+
+    // ── Parse Nav Status ──────────────────────────────────────────
+    function parseNavStatus(text) {
+      const sm = text.match(/\[(.*?)\]/); if (sm) document.getElementById('navState').textContent = sm[1];
+      const wm = text.match(/WP(\d+)/); if (wm) document.getElementById('wpIndex').textContent = wm[1];
+      const cm = text.match(/Cycle (\d+)/i); if (cm) document.getElementById('cyclesDone').textContent = cm[1];
+
+      const ns = document.getElementById('navState');
+      if (text.includes('STARTING')) { ns.textContent = 'STARTING'; ns.style.color = '#2563eb'; }
+      else if (text.includes('STOPPED')) { ns.textContent = 'STOPPED'; ns.style.color = '#dc2626'; }
+      else if (text.includes('RUNNING')) { ns.textContent = 'RUNNING'; ns.style.color = '#059669'; }
+      else if (text.includes('DONE')) { ns.textContent = 'DONE'; ns.style.color = '#0891b2'; }
+    }
+
+    // ── Update Odometry ───────────────────────────────────────────
+    function updateOdom(msg) {
+      const p = msg.pose.pose.position;
+      const o = msg.pose.pose.orientation;
+      const v = msg.twist.twist;
+      const yaw = Math.atan2(2 * (o.w * o.z + o.x * o.y), 1 - 2 * (o.y * o.y + o.z * o.z)) * 180 / Math.PI;
+      document.getElementById('odomX').textContent = p.x.toFixed(3);
+      document.getElementById('odomY').textContent = p.y.toFixed(3);
+      document.getElementById('odomYaw').textContent = yaw.toFixed(1) + '°';
+      document.getElementById('odomLinVel').textContent = v.linear.x.toFixed(3);
+      document.getElementById('odomAngVel').textContent = v.angular.z.toFixed(3);
+    }
+
+    // ── Mission Control ───────────────────────────────────────────
+    function publishCycles(value) {
+      if (!connected) { addLog('❌ Not connected!'); return; }
+      new ROSLIB.Topic({ ros, name: '/set_cycles', messageType: 'std_msgs/msg/Int32' })
+        .publish(new ROSLIB.Message({ data: value }));
+      addLog(`📤 Published /set_cycles = ${value}`);
+    }
+
+    function startMission() {
+      const cycles = parseInt(document.getElementById('cyclesInput').value) || 1;
+      const m = MISSIONS[selectedMission];
+      if (!m) { addLog('❌ No mission selected!'); return; }
+      addLog(`🚀 Starting "${m.name}" — ${cycles} cycle(s)`);
+      publishCycles(cycles);
+    }
+
+    function stopMission() {
+      addLog('🛑 STOP command sent');
+      publishCycles(0);
+    }
+
+    function loopForever() {
+      addLog(`🔁 Loop forever — "${MISSIONS[selectedMission].name}"`);
+      publishCycles(-1);
+    }
+
+    // ── Log ───────────────────────────────────────────────────────
+    function addLog(message) {
+      const c = document.getElementById('logEntries');
+      const e = document.createElement('div');
+      e.className = 'log-entry';
+      e.innerHTML = `<span class="time">${new Date().toLocaleTimeString()}</span><span class="msg">${message}</span>`;
+      c.insertBefore(e, c.firstChild);
+      while (c.children.length > 50) c.removeChild(c.lastChild);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    populateMissions();
+    addLog('🖥️ AMR Mission Control loaded');
+    addLog('🌐 Enter robot IP address and click Connect');
+
+    // Auto-connect if we have a saved IP
+    setTimeout(() => {
+      const savedIP = localStorage.getItem('amr_robot_ip');
+      if (savedIP) {
+        document.getElementById('robotIpInput').value = savedIP;
+        document.getElementById('robotPortInput').value = localStorage.getItem('amr_robot_port') || '9090';
+        addLog(`📋 Loaded saved IP: ${savedIP}`);
+      }
+    }, 100);
+  </script>
+</body>
+
+</html>

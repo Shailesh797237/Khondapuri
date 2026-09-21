@@ -1,0 +1,19 @@
+waypoints:
+# ── WP10: (-0.69, -1.29) ──────────────────────────────
+- x:           -1.15
+  y:           -1.29
+  theta:       1.581094
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+
+# ── WP11: (-0.7, -0.32) ──────────────────────────────
+- x:           -1.15
+  y:           0.30
+  theta:       0
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+

@@ -1,0 +1,14 @@
+waypoints:
+  - x: -7.98
+    y: -0.19
+    theta: 0.008378
+    type: waypoint
+    mission: forward
+    rotation: auto
+
+  - x: 1.64
+    y: -0.11
+    theta: 3.14997
+    type: waypoint
+    mission: forward
+    rotation: auto

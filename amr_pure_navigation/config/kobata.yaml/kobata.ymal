@@ -1,0 +1,448 @@
+ - x:           18.33
+   y:           24.49
+   theta:       6.041        # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto  
+
+ - x:           19.2
+   y:           24.68
+   theta:       5.85        # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   
+ - x:           19.77
+   y:           24.42
+   theta:       5.7        # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto   
+   
+ - x:           20.34
+   y:           24.07
+   theta:       5.38       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   
+ - x:           20.69
+   y:           23.63
+   theta:       5.27        # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto             
+
+ - x:            21.01
+   y:            23.12
+   theta:        4.94       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto
+
+ - x:           21.14
+   y:           22.58
+   theta:       4.66        # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   
+ - x:           21.11
+   y:           21.95
+   theta:       4.80       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto   
+   
+ - x:           21.17
+   y:           21.31
+   theta:       4.71       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   
+ - x:           21.17
+   y:           20.81
+   theta:       4.71      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+
+ - x:            21.17
+   y:            3.89
+   theta:        4.71       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto
+   speed:       0.5 
+
+ - x:            21.18
+   y:            3.37
+   theta:        4.71       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   speed:       0.4
+     
+
+ - x:            21.18
+   y:            2.89
+   theta:        4.48      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto
+   speed:       0.35
+
+
+
+ - x:           21.08
+   y:           2.45
+   theta:       4.28      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   
+ - x:           20.9
+   y:           2.05
+   theta:       4.26      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto   
+   
+ - x:           20.72
+   y:           1.67
+   theta:       4.09       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   
+   
+   
+   
+ - x:           20.52
+   y:           1.39
+   theta:       3.98      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   
+ - x:           20.29
+   y:           1.13
+   theta:       4.01      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto       
+
+ - x:            20.06
+   y:            0.88
+   theta:        4.01       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto
+
+ - x:            19.76
+   y:            0.7
+   theta:        3.49     # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto      
+
+ - x:            19.43
+   y:            0.50
+   theta:        3.43     # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto
+
+
+ - x:           19.07
+   y:           0.35
+   theta:       3.32      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+   
+ - x:           18.69
+   y:           0.13
+   theta:       3.12      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto   
+   
+ - x:           18.26
+   y:           -0.15
+   theta:       3.14       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto 
+  
+  
+ - x:           17.75
+   y:           -0.20
+   theta:       3.14      # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto       
+
+ - x:            17.27
+   y:            -0.25
+   theta:        3.14       # face North (90°)
+   type:        waypoint
+   mission:     forward
+   rotation:    auto
+   
+   
+ #- x:           9.27
+ #  y:           -0.55
+ #  theta:       3.14       # face North (90°)
+ #  type:        waypoint
+ #  mission:     forward
+ #  rotation:    auto 
+
+ - x:           0.0
+   y:           -0.60
+   theta:       3.14        # face North (90°)
+   type:        station
+   mission:     forward
+   rotation:    auto
+   speed:       0.5
+
+ - x:           0.0
+   y:           -0.55
+   theta:       0.0        # face North (90°)
+   type:        station
+   mission:     forward
+   rotation:    auto
+
+
+ - x:           17.27
+   y:           -0.25
+   theta:       6.282
+   type:        waypoint
+   mission:     return
+   rotation:    auto
+   speed:       0.4  
+
+
+ - x:           17.75
+   y:           -0.20
+   theta:       6.282
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+
+ - x:           18.26
+   y:           -0.11
+   theta:       6.282
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+
+ - x:           18.69
+   y:           0.13
+   theta:       6.262
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+ - x:           19.07
+   y:           0.35
+   theta:       0.178
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+
+ - x:           19.43
+   y:           0.5
+   theta:       0.288
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+ - x:           19.76
+   y:           0.7
+   theta:       0.348
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+ - x:           20.06
+   y:           0.88
+   theta:       0.868
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+ - x:           20.29
+   y:           1.13
+   theta:       0.868
+   type:        waypoint
+   mission:     return
+   rotation:    auto  
+
+
+ - x:           20.52
+   y:           1.39
+   theta:       0.838
+   type:        waypoint
+   mission:     return
+   rotation:    auto  
+
+
+ - x:           20.72
+   y:           1.67
+   theta:       0.948
+   type:        waypoint
+   mission:     return
+   rotation:    auto  
+
+
+ - x:           20.9
+   y:           2.05
+   theta:       1.118
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+ - x:           21.08
+   y:           2.45
+   theta:       1.138
+   type:        waypoint
+   mission:     return
+   rotation:    auto 
+
+
+ - x:           21.18
+   y:           2.89
+   theta:       1.338
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+ - x:           21.18
+   y:           3.37
+   theta:       1.568
+   type:        waypoint
+   mission:     return
+   rotation:    auto 
+
+
+ - x:           21.17
+   y:           3.89
+   theta:       1.568
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+ - x:           21.17
+   y:           20.81
+   theta:       1.568
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+   speed:       0.5
+
+
+ - x:           21.17
+   y:           21.31
+   theta:       1.568
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+   speed:       0.4
+
+
+ - x:           21.11
+   y:           21.95
+   theta:       1.658
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+
+ - x:           21.14
+   y:           22.58
+   theta:       1.518
+   type:        waypoint
+   mission:     return
+   rotation:    auto  
+
+ - x:           21.01
+   y:           23.12
+   theta:       1.798
+   type:        waypoint
+   mission:     return
+   rotation:    auto  
+
+ - x:           20.69
+   y:           23.63
+   theta:       2.128
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+ - x:           20.34
+   y:           24.07
+   theta:       2.238
+   type:        waypoint
+   mission:     return
+   rotation:    auto   
+
+ - x:           19.77
+   y:           24.42
+   theta:       2.558
+   type:        waypoint
+   mission:     return
+   rotation:    auto  
+
+ - x:           19.2
+   y:           24.68
+   theta:       2.708
+   type:        waypoint
+   mission:     return
+   rotation:    auto  
+
+
+ - x:           18.33
+   y:           24.49
+   theta:       2.899
+   type:        waypoint
+   mission:     return
+   rotation:    auto  
+
+ - x:           15.10
+   y:           24.41
+   theta:       3.14
+   type:        waypoint
+   mission:     return
+   rotation:    auto
+   speed:       0.5 
+
+ - x:           14.44
+   y:           24.41
+   theta:       3.14
+   type:        station
+   mission:     return
+   rotation:    auto
+   speed:       0.25 
+
+ - x:           14.44
+   y:           24.41
+   theta:       0.0
+   type:        station
+   mission:     return
+   rotation:    auto   
+

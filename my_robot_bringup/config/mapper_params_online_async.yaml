@@ -1,0 +1,329 @@
+# slam_toolbox:
+#   ros__parameters:
+
+#     # ------------------------------
+#     # Solver Parameters
+#     # ------------------------------
+#     solver_plugin: solver_plugins::CeresSolver
+#     ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+#     ceres_preconditioner: SCHUR_JACOBI
+#     ceres_trust_strategy: LEVENBERG_MARQUARDT
+#     ceres_dogleg_type: TRADITIONAL_DOGLEG
+#     ceres_loss_function: None
+
+
+#     # ------------------------------
+#     # ROS Frame Parameters
+#     # ------------------------------
+#     odom_frame: odom
+#     map_frame: map
+#     base_frame: base_link
+#     scan_topic: /scan
+
+
+#     # ------------------------------
+#     # Mode
+#     # ------------------------------
+#     mode: mapping                 # CHANGED (use mapping while generating map)
+
+
+#     # ------------------------------
+#     # Map loading (used in localization)
+#     # ------------------------------
+#     map_file_name: /home/shailesh/ekf_ws/my_map_serial
+#     map_start_at_dock: true
+
+
+#     # ------------------------------
+#     # General Settings
+#     # ------------------------------
+#     debug_logging: false
+
+#     throttle_scans: 2             # CHANGED (scan is ~33Hz, process ~16Hz)
+
+#     transform_publish_period: 0.02
+
+#     map_update_interval: 2.0      # CHANGED (faster map updates)
+
+#     resolution: 0.05              # good warehouse resolution
+
+#     max_laser_range: 4.0          # CHANGED (matches merged scan range)  5
+
+#     minimum_time_interval: 0.09    # CHANGED (better updates for slow robot)
+
+#     transform_timeout: 0.2
+#     tf_buffer_duration: 30.
+
+#     stack_size_to_use: 40000000
+
+#     enable_interactive_mode: true
+
+
+#     # ------------------------------
+#     # Scan Matching
+#     # ------------------------------
+#     use_scan_matching: true
+#     use_scan_barycenter: true
+
+
+#     # ------------------------------
+#     # Robot Motion Thresholds
+#     # ------------------------------
+#     minimum_travel_distance: 0.02    # CHANGED (robot speed 0.1 m/s) 0.05
+
+#     minimum_travel_heading: 0.02     # CHANGED (better pose updates)0.05
+
+
+#     # ------------------------------
+#     # Scan Buffer
+#     # ------------------------------
+#     scan_buffer_size: 20             # CHANGED (more scans stored)
+
+#     scan_buffer_maximum_scan_distance: 10.0   # CHANGED
+
+
+#     # ------------------------------
+#     # Scan Linking
+#     # ------------------------------
+#     link_match_minimum_response_fine: 0.1
+
+#     link_scan_maximum_distance: 2.0   # CHANGED (better for warehouse)
+
+
+#     # ------------------------------
+#     # Loop Closure
+#     # ------------------------------
+#     loop_search_maximum_distance: 5.0  # CHANGED (warehouse corridors)
+
+#     do_loop_closing: true
+
+#     loop_match_minimum_chain_size: 10
+
+#     loop_match_maximum_variance_coarse: 3.0
+
+#     loop_match_minimum_response_coarse: 0.35
+
+#     loop_match_minimum_response_fine: 0.45
+
+
+#     # ------------------------------
+#     # Correlation Parameters
+#     # ------------------------------
+#     correlation_search_space_dimension: 0.3   #0.5
+
+#     correlation_search_space_resolution: 0.01
+
+#     correlation_search_space_smear_deviation: 0.1
+
+
+#     # ------------------------------
+#     # Loop Closure Correlation
+#     # ------------------------------
+#     loop_search_space_dimension: 8.0
+
+#     loop_search_space_resolution: 0.05
+
+#     loop_search_space_smear_deviation: 0.03
+
+
+#     # ------------------------------
+#     # Scan Matcher Penalties
+#     # ------------------------------
+#     distance_variance_penalty: 0.3    #0.5
+
+#     angle_variance_penalty: 1.0
+
+
+#     fine_search_angle_offset: 0.00349
+
+#     coarse_search_angle_offset: 0.349
+
+#     coarse_angle_resolution: 0.0349
+
+
+#     minimum_angle_penalty: 0.9
+
+#     minimum_distance_penalty: 0.5
+
+#     use_response_expansion: true
+
+
+slam_toolbox:
+  ros__parameters:
+
+    # ------------------------------------------------
+    # Solver Parameters
+    # ------------------------------------------------
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+
+    # ------------------------------------------------
+    # ROS Frame Parameters
+    # ------------------------------------------------
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+
+
+    # ------------------------------------------------
+    # Mode
+    # ------------------------------------------------
+    mode: mapping      # Using mapping mode while building map
+
+
+    # ------------------------------------------------
+    # Map loading (used later for localization)
+    # ------------------------------------------------
+    # map_file_name: /home/shailesh/ekf_ws/my_map_serial
+    # map_start_at_dock: true
+
+
+    # ------------------------------------------------
+    # General Settings
+    # ------------------------------------------------
+    debug_logging: false
+
+    throttle_scans: 3
+    # REDUCED processing load
+    # Your scan ≈ 33Hz → slam processes ~16Hz
+    # Improves stability
+
+    transform_publish_period: 0.02
+
+    map_update_interval: 1.0
+    # REDUCED from 2.0
+    # Map updates faster → easier to monitor mapping quality
+
+    resolution: 0.03
+    # Map grid resolution (good balance of accuracy vs CPU)
+
+    max_laser_range: 8.0
+    # INCREASED from 3.2 to 8.0
+    # Allows lidar data from much further away → maps larger area
+    # Set this to match your actual lidar's usable range
+
+    minimum_time_interval: 0.09
+    # Slightly reduced to allow faster pose updates
+
+    transform_timeout: 0.2
+    tf_buffer_duration: 30.
+
+    stack_size_to_use: 40000000
+
+    enable_interactive_mode: true
+
+
+    # ------------------------------------------------
+    # Scan Matching
+    # ------------------------------------------------
+    use_scan_matching: true
+    use_scan_barycenter: true
+
+
+    # ------------------------------------------------
+    # Robot Motion Thresholds
+    # ------------------------------------------------
+    minimum_travel_distance: 0.02
+    # REDUCED from default
+    # Robot is slow → update pose every 2cm
+
+    minimum_travel_heading: 0.02
+    # REDUCED → improves accuracy during slow turns
+
+
+    # ------------------------------------------------
+    # Scan Buffer
+    # ------------------------------------------------
+    scan_buffer_size: 25
+    # INCREASED from 20
+    # Larger scan history improves scan matching stability
+
+    scan_buffer_maximum_scan_distance: 15.0
+
+
+    # ------------------------------------------------
+    # Scan Linking
+    # ------------------------------------------------
+    link_match_minimum_response_fine: 0.1
+
+    link_scan_maximum_distance: 3.0
+    # INCREASED from 1.4 to 3.0
+    # Allows linking scans that are further apart → better large-area coverage
+
+
+    # ------------------------------------------------
+    # Loop Closure
+    # ------------------------------------------------
+    loop_search_maximum_distance: 8.0
+    # INCREASED from 5.0
+    # Warehouse corridors require larger loop search
+
+    do_loop_closing: true
+
+    loop_match_minimum_chain_size: 10
+
+    loop_match_maximum_variance_coarse: 3.0
+
+    loop_match_minimum_response_coarse: 0.4
+    # INCREASED from 0.35
+    # Prevents false loop closures
+
+    loop_match_minimum_response_fine: 0.55
+    # INCREASED from 0.45
+    # Improves loop closure reliability
+
+
+    # ------------------------------------------------
+    # Correlation Parameters
+    # ------------------------------------------------
+    correlation_search_space_dimension: 0.5
+    # INCREASED from 0.22 back to 0.5
+    # Larger search window → scan matcher can handle bigger movements
+
+    correlation_search_space_resolution: 0.005
+    # REDUCED from 0.01
+    # Finer scan matching resolution → sharper map
+
+    correlation_search_space_smear_deviation: 0.025
+    # REDUCED from 0.1
+    # Less blur → clearer walls
+
+
+    # ------------------------------------------------
+    # Loop Closure Correlation
+    # ------------------------------------------------
+    loop_search_space_dimension: 8.0
+
+    loop_search_space_resolution: 0.05
+
+    loop_search_space_smear_deviation: 0.03
+
+
+    # ------------------------------------------------
+    # Scan Matcher Penalties
+    # ------------------------------------------------
+    distance_variance_penalty: 0.3
+    # REDUCED from 0.5
+    # Allows more flexible scan matching
+
+    angle_variance_penalty: 1.8
+    # INCREASED from 1.0
+    # Stabilizes robot orientation estimation
+
+    fine_search_angle_offset: 0.00349
+
+    coarse_search_angle_offset: 0.349
+
+    coarse_angle_resolution: 0.0349
+
+    minimum_angle_penalty: 0.9
+
+    minimum_distance_penalty: 0.5
+
+    use_response_expansion: true

@@ -1,0 +1,895 @@
+# ================================================================
+#  waypoints.yaml
+#  Define your robot path here.
+#
+#  HOW IT WORKS:
+#  - Robot reads each waypoint one by one
+#  - If x,y changes  → robot DRIVES STRAIGHT to that x,y
+#  - If only theta changes → robot ROTATES in place
+#  - theta in radians:
+#       0.0   = facing +X (East)
+#       1.57  = facing +Y (North)  → anticlockwise 90°
+#      -1.57  = facing -Y (South)  → clockwise 90°
+#       3.14  = facing -X (West)   → 180° turn
+#
+#  EXAMPLE BELOW: Square path
+#  ================================================================
+
+# waypoints:
+
+#   # ── Leg 1: Go straight along Y axis ──────────────────────────
+#   - x: 0.0
+#     y: 0.0
+#     theta: 1.57        # face North first
+
+#   - x: 0.0
+#     y: 1.5
+#     theta: 1.57        # go straight North 5m
+
+#   # ── Corner 1: Rotate to face East ────────────────────────────
+#   - x: 0.0
+#     y: 1.5
+#     theta: 0.0         # rotate 90° clockwise to face East
+
+#   # ── Leg 2: Go straight along X axis ──────────────────────────
+#   - x: 3.0
+#     y: 1.5
+#     theta: 0.0         # go straight East 5m
+
+  # # ── Corner 2: Rotate to face South ───────────────────────────
+  # - x: 3.0
+  #   y: 1.5
+  #   theta: -1.57       # rotate clockwise to face South
+
+  # # ── Leg 3: Go straight South ─────────────────────────────────
+  # - x: 3.0
+  #   y: 0.0
+  #   theta: -1.57       # go straight South 5m
+
+  # # ── Corner 3: Rotate to face West ────────────────────────────
+  # - x: 3.0
+  #   y: 0.0
+  #   theta: 3.14        # rotate to face West
+
+  # # ── Leg 4: Return to start ────────────────────────────────────
+  # - x: 0.0
+  #   y: 0.0
+  #   theta: 3.14        # go straight West back to start
+
+  # # ── Final: Rotate back to original heading ────────────────────
+  # - x: 0.0
+  #   y: 0.0
+  #   theta: 1.57         # rotate back to face East (original)
+
+  # - x: 3.0
+  #   y: 1.5
+  #   theta: 0.0        # go straight North 5m
+   
+
+
+  # - x: 0.0
+  #   y: 0.0
+  #   theta: 1.57        # face North first
+  #   type: station
+  #   mission: forword 
+
+  # - x: 0.0
+  #   y: 1.5
+  #   theta: 1.57        # go straight North 5m
+  #   type: waypoint
+  #   mission: reverse
+
+  # - x: 3.0
+  #   y: 1.5
+  #   theta: 0.0        # go straight North 5m
+  #   type: waypoint
+  #   mission: reverse  
+
+
+# 
+
+  # # ── Corner 1: Rotate to face East ────────────────────────────
+  #  - x: 0.0
+  #    y: 1.5
+  #    theta: 0.0         # rotate 90° clockwise to face East
+  #    type: waypoint
+  #    mission: forward
+
+  # # ── Leg 2: Go straight along X axis ──────────────────────────
+  #  - x: 3.0
+  #    y: 1.5
+  #    theta: 0.0         # go straight East 5m
+  #    type: waypoint
+  #    mission: forward
+
+  # # ── Corner 2: Rotate to face South ───────────────────────────
+  #  - x: 3.0
+  #    y: 1.5
+  #    theta: -1.57       # rotate clockwise to face South
+  #    type: waypoint
+  #    mission: forward
+
+  # # ── Leg 3: Go straight South ─────────────────────────────────
+  #  - x: 3.0
+  #    y: 0.0
+  #    theta: -1.57       # go straight South 5m
+  #    type: waypoint
+  #    mission: forward
+    
+
+  # # ── Corner 3: Rotate to face West ────────────────────────────
+  #  - x: 3.0
+  #    y: 0.0
+  #    theta: 3.14        # rotate to face West
+  #    type: waypoint
+  #    mission: forward 
+  #    name: "STASTION_A"
+  #    plc_feedback: "I0.1"
+
+  # # ── Leg 4: Return to start ────────────────────────────────────
+  #  - x: 0.0
+  #    y: 0.0
+  #    theta: 3.14        # go straight West back to start
+  #    type: waypoint
+  #    mission: forward
+
+
+  #  - x:           0.0
+  #    y:           1.5
+  #    theta:       3.14
+  #    type:        station
+  #    mission:     reverse
+  #    rotation:    ccw
+  #    name:        "STATION_A"   # IPC sends command=1 (from command_map)
+  #    plc_feedback: "I0.0"  
+
+  #  - x: 3.0
+  #    y: 0.0
+  #    theta: 1.57       # rotate to face West
+  #    type: waypoint
+  #    mission: reverse  
+  #    rotation: ccw 
+
+
+  #  - x: 3.0
+  #    y: 1.5
+  #    theta: 3.14       # rotate clockwise to face South
+  #    type: waypoint
+  #    mission: reverse 
+  #    rotation: ccw  
+
+  #  - x: 0.0
+  #    y: 1.5
+  #    theta: 3.14        # rotate 90° clockwise to face East
+  #    type: waypoint
+  #    ission: reverse
+
+  #  - x: 0.0
+  #    y: 0.0
+  #    theta: 0        # rotate 90° clockwise to face East
+  #    type: waypoint
+  #    ission: reverse  
+
+
+
+
+
+
+
+
+  # ================================================================
+#  waypoints.yaml  — Rectangle path with one PLC station
+#
+#  Flow:
+#    WP0: rotate to face North (y+)
+#    WP1: drive North to (0, 1.5)
+#    WP2: rotate East, drive East to (3.0, 1.5)
+#    WP3: rotate South, drive South to (3.0, 0.0)  ← STATION_A
+#    WP4: rotate West, drive West back to (0.0, 0.0)
+#
+#  PLC trigger:
+#    WP3 is type:station — robot stops, IPC sends command to PLC
+#    PLC runs its own program → sets I0.1 = TRUE when done
+#    IPC reads I0.1 → TRUE → robot moves on
+# ================================================================
+
+waypoints:
+
+  # # ── WP0: Rotate to face North ────────────────────────────────
+  # - x:           0.0
+  #   y:           0.0
+  #   theta:       1.57        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto
+
+  # # ── WP1: Drive North, then face East ─────────────────────────
+  # - x:           0.0
+  #   y:           1.5
+  #   theta:       0.0         # face East (0°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto
+
+  # # ── WP2: Drive East ───────────────────────────────────────────
+  # - x:           3.0
+  #   y:           1.5
+  #   theta:       -1.57       # face South (-90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto
+
+  # # ── WP3: Drive South → STATION_A ─────────────────────────────
+  # #  Robot arrives → IPC writes DB21.DBW4 = 1 to PLC
+  # #  PLC ladder reads 1 → runs its program → controls Q outputs
+  # #  PLC sets DB21.DBX6.1 = TRUE when done
+  # #  IPC reads I0.1 = TRUE → publishes /plc_done → robot moves on
+  # - x:           3.0
+  #   y:           0.0
+  #   theta:       3.14        # face West (180°)
+  #   type:        station     # ← triggers PLC bridge
+  #   mission:     forward
+  #   rotation:    auto
+  #   name:        "STATION_A" # matches command_map in station_map.yaml
+  #   plc_feedback: "I0.1"    # IPC reads DB21.DBX6.1 — PLC sets when done
+
+  # # ── WP4: Drive West back to start ────────────────────────────
+  # - x:           0.0
+  #   y:           0.0
+  #   theta:       0.0         # face East at home
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto
+
+
+
+  # running
+  
+#  - x:           -2.2
+#    y:            24.36
+#    theta:        0.0        # face North (90°)
+#    type:        waypoint
+#    mission:     forward
+#    rotation:    auto
+
+#  - x:           20.7
+#    y:           24.2
+#    theta:       0.0        # face North (90°)
+#    type:        waypoint
+#    mission:     forward
+#    rotation:    auto
+
+# main
+    
+  - x:          -0.79
+    y:           0.01
+    theta:       0.016        # face North (90°)
+    type:        waypoint
+    mission:     forward
+    rotation:    auto  
+
+  - x:           8.48
+    y:           0.16
+    theta:       1.55      # face North (90°)
+    type:        waypoint
+    mission:     forward
+    rotation:    auto 
+  
+  - x:           8.57
+    y:           7.80
+    theta:       3.14        # face North (90°)
+    type:        waypoint
+    mission:     forward
+    rotation:    auto   
+
+  - x:           -7.14
+    y:           7.60
+    theta:       4.72       # face North (90°)
+    type:        waypoint
+    mission:     forward
+    rotation:    auto 
+  
+  - x:           -7.07
+    y:           0.10
+    theta:       6.26        # face North (90°)
+    type:        waypoint
+    mission:     forward
+    rotation:    auto             
+#
+# - x:            21.01
+#   y:            23.12
+#   theta:        4.94       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto
+#
+# - x:           21.14
+#   y:           22.58
+#   theta:       4.66        # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#   
+# - x:           21.11
+#   y:           21.95
+#   theta:       4.80       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto   
+#   
+# - x:           21.17
+#   y:           21.31
+#   theta:       4.71       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#   
+# - x:           21.17
+#   y:           20.81
+#   theta:       4.71      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#
+# - x:            21.17
+#   y:            3.89
+#   theta:        4.71       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto
+#   speed:       0.5 
+#
+# - x:            21.18
+#   y:            3.37
+#   theta:        4.71       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#   speed:       0.4
+#     
+#
+# - x:            21.18
+#   y:            2.89
+#   theta:        4.48      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto
+#   speed:       0.35
+#
+#
+#
+# - x:           21.08
+#   y:           2.45
+#   theta:       4.28      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#   
+# - x:           20.9
+#   y:           2.05
+#   theta:       4.26      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto   
+#   
+# - x:           20.72
+#   y:           1.67
+#   theta:       4.09       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#   
+#   
+#   
+#   
+# - x:           20.52
+#   y:           1.39
+#   theta:       3.98      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#   
+# - x:           20.29
+#   y:           1.13
+#   theta:       4.01      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto       
+#
+# - x:            20.06
+#   y:            0.88
+#   theta:        4.01       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto
+#
+# - x:            19.76
+#   y:            0.7
+#   theta:        3.49     # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto      
+#
+# - x:            19.43
+#   y:            0.50
+#   theta:        3.43     # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto
+#
+#
+# - x:           19.07
+#   y:           0.35
+#   theta:       3.32      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#   
+# - x:           18.69
+#   y:           0.13
+#   theta:       3.12      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto   
+#   
+# - x:           18.26
+#   y:           -0.15
+#   theta:       3.14       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto 
+#  
+#  
+# - x:           17.75
+#   y:           -0.20
+#   theta:       3.14      # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto       
+#
+# - x:            17.27
+#   y:            -0.25
+#   theta:        3.14       # face North (90°)
+#   type:        waypoint
+#   mission:     forward
+#   rotation:    auto
+#   
+#   
+# #- x:           9.27
+# #  y:           -0.55
+# #  theta:       3.14       # face North (90°)
+# #  type:        waypoint
+# #  mission:     forward
+# #  rotation:    auto 
+#
+# - x:           0.0
+#   y:           -0.60
+#   theta:       3.14        # face North (90°)
+#   type:        station
+#   mission:     forward
+#   rotation:    auto
+#   speed:       0.5
+#
+# - x:           0.0
+#   y:           -0.55
+#   theta:       0.0        # face North (90°)
+#   type:        station
+#   mission:     forward
+#   rotation:    auto
+#
+#
+# - x:           17.27
+#   y:           -0.25
+#   theta:       6.282
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto
+#   speed:       0.4  
+#
+#
+# - x:           17.75
+#   y:           -0.20
+#   theta:       6.282
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+#
+# - x:           18.26
+#   y:           -0.11
+#   theta:       6.282
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+#
+# - x:           18.69
+#   y:           0.13
+#   theta:       6.262
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+# - x:           19.07
+#   y:           0.35
+#   theta:       0.178
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+#
+# - x:           19.43
+#   y:           0.5
+#   theta:       0.288
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+# - x:           19.76
+#   y:           0.7
+#   theta:       0.348
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+# - x:           20.06
+#   y:           0.88
+#   theta:       0.868
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+# - x:           20.29
+#   y:           1.13
+#   theta:       0.868
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto  
+#
+#
+# - x:           20.52
+#   y:           1.39
+#   theta:       0.838
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto  
+#
+#
+# - x:           20.72
+#   y:           1.67
+#   theta:       0.948
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto  
+#
+#
+# - x:           20.9
+#   y:           2.05
+#   theta:       1.118
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+# - x:           21.08
+#   y:           2.45
+#   theta:       1.138
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto 
+#
+#
+# - x:           21.18
+#   y:           2.89
+#   theta:       1.338
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+# - x:           21.18
+#   y:           3.37
+#   theta:       1.568
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto 
+#
+#
+# - x:           21.17
+#   y:           3.89
+#   theta:       1.568
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+# - x:           21.17
+#   y:           20.81
+#   theta:       1.568
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#   speed:       0.5
+#
+#
+# - x:           21.17
+#   y:           21.31
+#   theta:       1.568
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#   speed:       0.4
+#
+#
+# - x:           21.11
+#   y:           21.95
+#   theta:       1.658
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+#
+# - x:           21.14
+#   y:           22.58
+#   theta:       1.518
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto  
+#
+# - x:           21.01
+#   y:           23.12
+#   theta:       1.798
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto  
+#
+# - x:           20.69
+#   y:           23.63
+#   theta:       2.128
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+# - x:           20.34
+#   y:           24.07
+#   theta:       2.238
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto   
+#
+# - x:           19.77
+#   y:           24.42
+#   theta:       2.558
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto  
+#
+# - x:           19.2
+#   y:           24.68
+#   theta:       2.708
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto  
+#
+#
+# - x:           18.33
+#   y:           24.49
+#   theta:       2.899
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto  
+#
+# - x:           15.10
+#   y:           24.41
+#   theta:       3.14
+#   type:        waypoint
+#   mission:     return
+#   rotation:    auto
+#   speed:       0.5 
+#
+# - x:           14.44
+#   y:           24.41
+#   theta:       3.14
+#   type:        station
+#   mission:     return
+#   rotation:    auto
+#   speed:       0.25 
+#
+# - x:           14.44
+#   y:           24.41
+#   theta:       0.0
+#   type:        station
+#   mission:     return
+#   rotation:    auto   
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+
+
+
+
+
+
+
+
+  # - x:           19.83
+  #   y:           24.12
+  #   theta:       5.60        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto 
+    
+  # - x:           20.93
+  #   y:           23.23
+  #   theta:       4.80        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto   
+    
+  # - x:           21.05
+  #   y:           21.97
+  #   theta:       4.74        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto 
+    
+  # - x:           21.09
+  #   y:           20.79
+  #   theta:       4.71        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto             
+
+  # - x:            22.0
+  #   y:            0.45
+  #   theta:        3.14        # face North (90°)
+  #   type:        station
+  #   mission:     forward
+  #   rotation:    auto
+
+    
+#  - x:            21.46
+#    y:            0.45
+#    theta:        1.57        # face North (90°)
+#    type:        waypoint
+#    mission:     forward
+#    rotation:    auto
+
+#  - x:           21.7
+#    y:           24.2
+#    theta:       3.14        # face North (90°)#    type:        waypoint
+#    mission:     forward
+#    rotation:    auto 
+    
+#  - x:            10.2
+#    y:            24.36
+#    theta:        0.0        # face North (90°)
+#    type:        waypoint
+#    mission:     forward
+#    rotation:    auto 
+
+#up main   
+
+ # - x:           -3.2
+ #   y:            0.5
+ #   theta:       1.57        # face North (90°)
+ #   type:        waypoint
+ #   mission:     forward
+ #   rotation:    auto
+
+ # - x:           -4.6
+ #   y:            0.6
+ #   theta:       6.28       # face North (90°)
+ #   type:        waypoint
+ #   mission:     forward
+ #   rotation:    auto 
+      
+ # - x:           -4.6
+ #   y:           -0.6
+ #   theta:       0.0       # face North (90°)
+ #   type:        waypoint
+ #   mission:     forward
+ #   rotation:    auto   
+
+  # - x:          -8.0
+  #   y:           0.0
+  #   theta:       0.0        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto
+
+  # - x:          -7.0
+  #   y:           0.0
+  #   theta:       0.0        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto  
+
+  # - x:           0.0
+  #   y:           0.0
+  #   theta:       0.0        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto    
+
+  # - x:           2.0
+  #   y:           0.0
+  #   theta:       0.0        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto
+
+  # - x:           4.0
+  #   y:           0.0
+  #   theta:       0.0        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto  
+
+  # - x:           6.0
+  #   y:           0.0
+  #   theta:       0.0        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto   
+
+  # - x:           6.0
+  #   y:           0.0
+  #   theta:       3.14        # face West (180°)
+  #   type:        station     # ← triggers PLC bridge
+  #   mission:     forward
+  #   rotation:    auto
+  #   name:        "STATION_A" # matches command_map in station_map.yaml
+  #   plc_feedback: "I0.1"  
+
+  # - x:           0.0
+  #   y:           0.0
+  #   theta:       3.14        # face North (90°)
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto   
+
+# # ── WP0: station_1 — face West ────────────────────────────────
+#   - x:           6.03
+#     y:           0.32
+#     theta:       3.14
+#     type:        waypoint
+#     mission:     forward
+#     rotation:    auto
+#     # name:        "station_1"
+#     # plc_feedback: "I0.1"
+
+# # ── WP1: station_2 — face East ────────────────────────────────
+#   - x:           -3.30
+#     y:           0.32
+#     theta:       0
+#     type:        waypoint
+#     mission:     forward
+#     rotation:    auto
+#     # name:        "station_2"
+#     # plc_feedback: "I0.1"
+
+# # ── WP2: waypoint_1 — face East ────────────────────────────────
+#   - x:           1.82
+#     y:           0.34
+#     theta:       6.28
+#     type:        waypoint
+#     mission:     forward
+#     rotation:    auto
+
+
+

@@ -1,0 +1,33 @@
+# Waypoint configuration
+
+waypoints:
+# ============================================================
+#  FORWARD PATH
+# ============================================================
+
+# ── WP1: (7.15, -0.32) ──────────────────────────────
+- x:           7.15
+  y:           -0.32
+  theta:       0
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+
+# ── WP2: (8.14, -0.32) ──────────────────────────────
+- x:           8.35
+  y:           -0.32
+  theta:       4.712389
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+
+# ── WP3: (8.14, -0.87) ──────────────────────────────
+- x:           8.35
+  y:           -0.87
+  theta:       4.712389
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15

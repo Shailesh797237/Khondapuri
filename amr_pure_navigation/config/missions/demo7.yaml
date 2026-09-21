@@ -1,0 +1,63 @@
+waypoints:
+# ── WP15: (0.52, -3.4) ──────────────────────────────
+- x:           0.52
+  y:           -3.4
+  theta:       3.064798
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.1
+
+# ── WP16: (0.13, -3.37) ──────────────────────────────
+- x:           0.13
+  y:           -3.37
+  theta:       3.218387
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.1
+
+# ── WP17: (-0.26, -3.4) ──────────────────────────────
+- x:           -0.26
+  y:           -3.4
+  theta:       2.944196
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.1
+
+# ── WP18: (-0.71, -3.31) ──────────────────────────────
+- x:           -0.71
+  y:           -3.31
+  theta:       2.455853
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.1
+
+# ── WP19: (-1.04, -3.04) ──────────────────────────────
+- x:           -1.04
+  y:           -3.04
+  theta:       1.637293
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.1
+
+# ── WP20: (-1.07, -2.59) ──────────────────────────────
+- x:           -1.07
+  y:           -2.59
+  theta:       1.633279
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.1
+
+# ── WP21: (-1.1, -2.11) ──────────────────────────────
+- x:           -1.1
+  y:           -2.11
+  theta:       1.548107
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.1

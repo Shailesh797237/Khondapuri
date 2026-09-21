@@ -1,0 +1,64 @@
+# ================================================================
+#  amcl_map_params.yaml
+#  Only AMCL + Map Server params
+#  Navigation logic is handled by your custom C++ node
+# ================================================================
+
+amcl:
+  ros__parameters:
+    use_sim_time: false
+
+    # Motion model — LOWER values = less particle spread from odom noise
+    # This is critical: during STO recovery, even small odom noise
+    # can cause particles to diverge with high alpha values
+    alpha1: 0.1       # rotation→rotation noise  (was 0.2)
+    alpha2: 0.1       # translation→rotation noise (was 0.2)
+    alpha3: 0.1       # translation→translation noise (was 0.2)
+    alpha4: 0.1       # rotation→translation noise (was 0.2)
+    alpha5: 0.1       # translation threshold (was 0.2)
+
+    # Frames
+    tf_broadcast: true
+    transform_tolerance: 1.0  
+    base_frame_id:   "base_link"
+    odom_frame_id:   "odom"
+    global_frame_id: "map"
+
+    # Laser model
+    laser_model_type: "likelihood_field"
+    max_beams:        60
+    laser_max_range:  10.0
+    laser_min_range:  0.0
+
+    # Particle filter — MORE particles = more resilient after disturbances
+    min_particles: 1000         # was 500 — more particles survive STO events
+    max_particles: 5000         # was 2000 — wider search if delocalized
+    pf_err:        0.01         # was 0.05 — tighter error bound
+    pf_z:          0.99
+
+    # Recovery — re-inject random particles when filter confidence drops
+    recovery_alpha_slow: 0.001  # slow average weight decay
+    recovery_alpha_fast: 0.1    # fast average weight decay
+    # When fast avg << slow avg, random particles are injected → helps recover
+
+    # Update thresholds — update AMCL more frequently for better tracking
+    update_min_d: 0.05          # was 0.10 — update after 5cm movement
+    update_min_a: 0.05          # was 0.10 — update after ~3° rotation
+    resample_interval: 1
+
+    # Sensor model weights
+    z_hit:    0.5
+    z_rand:   0.5
+    z_short:  0.05
+    z_max:    0.05
+    sigma_hit: 0.2
+
+    tf_broadcast:        true
+    transform_tolerance: 1.0
+    scan_topic:          /scan
+
+map_server:
+  ros__parameters:
+    use_sim_time: false
+    # ⚠ Change this to your actual map file path
+    yaml_filename: "/home/shailesh/ekf_ws/src/my_robot_description/rviz/taikisha.yaml"

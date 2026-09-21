@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <ros2_control name="MobileBase" type="system">
+
+    <hardware>
+      <!-- <plugin>mock_components/GenericSystem</plugin>
+      <param name="calculate_dynamics">true</param> -->
+      <plugin>mobile_base_hardware/MobileBaseHardwareInterface</plugin>
+      <param name="pulses_per_revolution">100000</param>
+
+      <!-- <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      <param name="pulses_per_revolution">100000</param> -->
+      
+    </hardware>
+
+    <!-- <joint name="base_right_wheel_joint" type="continuous">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="base_left_wheel_joint" type="continuous">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint> -->
+
+    <joint name="rightwheel" type="continuous">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="leftwheel" type="continuous">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+<!-- 
+    <joint name="backidler" type="continuous">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="frontidler" type="continuous">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint> -->
+
+
+
+  </ros2_control>
+
+</robot>

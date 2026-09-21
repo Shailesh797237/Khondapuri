@@ -1,0 +1,60 @@
+# ================================================================
+#  FAST-LIO2 Configuration for Livox MID-360 + Xsens MTi-320 IMU
+#
+#  This config is used by fastlio2_mapping_launch.py
+#  to create 3D point cloud maps.
+# ================================================================
+
+/**:
+  ros__parameters:
+    feature_extract_enable: false
+    point_filter_num: 3
+    max_iteration: 3
+    filter_size_surf: 0.5
+    filter_size_map: 0.5
+    cube_side_length: 1000.0
+    runtime_pos_log_enable: false
+    map_file_path: "./test.pcd"
+
+    # ── Common Settings ─────────────────────────────────────────
+    common:
+      lid_topic: "/livox/lidar"   # published by livox_ros_driver2 (sensor_msgs/PointCloud2)
+      imu_topic: "/livox/imu" #"/imu/data"             # Xsens MTi-320
+      time_sync_en: false                # timestamps already synced by restamper
+      time_offset_lidar_to_imu: 0.0
+
+    # ── Preprocessing Settings ──────────────────────────────────
+    preprocess:
+      lidar_type: 4                      # 1 = Livox (Avia, Mid-360, HAP, etc.)
+      scan_line: 4                       # MID-360 non-repetitive pattern
+      blind: 0.5                         # ignore points closer than 0.5m
+      timestamp_unit: 3                  # US
+      scan_rate: 10
+
+    # ── Mapping Settings ────────────────────────────────────────
+    mapping:
+      acc_cov: 0.1                       # accelerometer noise
+      gyr_cov: 0.1                       # gyroscope noise
+      b_acc_cov: 0.0001                  # accelerometer bias noise
+      b_gyr_cov: 0.0001                  # gyroscope bias noise
+      fov_degree: 360.0                  # MID-360 has 360° FOV
+      det_range: 40.0                    # max detection range (meters)
+      extrinsic_est_en: true             # let FAST-LIO estimate/refine extrinsics
+      extrinsic_T: [0.0, 0.0, 0.0]      #extrinsic_T: [0.0, 0.0, -0.1]
+      extrinsic_R: [1.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 0.0, 1.0]
+
+    # ── Publishing Settings ─────────────────────────────────────
+    publish:
+      path_en: true                      # publish /path (nav_msgs/Path)
+      effect_map_en: false
+      map_en: true                       # publish global map
+      scan_publish_en: true              # publish registered cloud
+      dense_publish_en: true             # publish dense cloud (not downsampled)
+      scan_bodyframe_pub_en: false       # publish in map frame, not body
+
+    # ── PCD Map Saving ──────────────────────────────────────────
+    pcd_save:
+      pcd_save_en: true                  # save PCD when node shuts down
+      interval: -1                       # -1 = save only at shutdown (Ctrl+C)

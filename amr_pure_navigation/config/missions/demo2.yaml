@@ -1,0 +1,29 @@
+waypoints:
+  
+# ── WP4: (8.14, -2.5) ──────────────────────────────
+- x:           8.50
+  y:           -2.5
+  theta:       4.712389
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+
+# ── WP5: (8.14, -3.34) ──────────────────────────────
+- x:           8.60
+  y:           -3.60
+  theta:       3.141593
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+
+# ── WP6: (7.6, -3.34) ──────────────────────────────
+- x:           7.6
+  y:           -3.50
+  theta:       3.131819
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+

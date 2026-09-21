@@ -1,0 +1,13 @@
+# ================================================================
+#  tag8_to_station_A.yaml — Go from Tag 8 to Station A (PLC stop)
+# ================================================================
+
+waypoints:
+
+  - x:           1.94
+    y:           -0.17
+    theta:       0.13
+    type:        station
+    mission:     forward
+    rotation:    auto
+

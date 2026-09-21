@@ -1,0 +1,10 @@
+<library path="lib/moons_hardware">
+  <class
+    name="moons_hardware/MoonsHardware"
+    type="moons_hardware::MoonsHardware"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Moons Hardware Interface
+    </description>
+  </class>
+</library>

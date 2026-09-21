@@ -1,0 +1,17 @@
+# Waypoint configuration
+# Default speed: 0.3 m/s (individual speeds override this)
+
+waypoints:
+# ============================================================
+#  FORWARD PATH
+# ============================================================
+
+# ── WP1: (-3.27, 2.68) ──────────────────────────────
+- x:           -1.15
+  y:           0.30
+  theta:       0
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+

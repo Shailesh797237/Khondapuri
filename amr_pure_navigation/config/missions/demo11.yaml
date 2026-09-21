@@ -1,0 +1,8 @@
+waypoints:
+- x:           14.34
+  y:           1.66
+  theta:       2.835636
+  type:        waypoint
+  mission:     reverse
+  rotation:    auto
+  speed:       0.1

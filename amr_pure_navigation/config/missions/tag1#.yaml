@@ -1,0 +1,19 @@
+# ================================================================
+#  tag1_to_tag5.yaml — Go from Tag 1 to Tag 5
+# ================================================================
+
+waypoints:
+
+  # - x:           1.52
+  #   y:           0.50
+  #   theta:       0.00
+  #   type:        waypoint
+  #   mission:     forward
+  #   rotation:    auto
+
+  - x:           0.00
+    y:           0.00
+    theta:       0.16
+    type:        station
+    mission:     forward
+    rotation:    auto

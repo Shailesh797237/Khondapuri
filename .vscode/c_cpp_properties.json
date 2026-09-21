@@ -1,0 +1,62 @@
+{
+  "version": 4,
+  "configurations": [
+    {
+      "name": "ROS2-All",
+      "compilerPath": "/usr/bin/g++",
+      "intelliSenseMode": "linux-gcc-x64",
+      "cStandard": "gnu11",
+      "cppStandard": "c++17",
+      "includePath": [
+        "/home/shailesh/turtulebot3_ws/install/turtlebot3_gazebo/include/**",
+        "/home/shailesh/turtulebot3_ws/install/turtlebot3_fake_node/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/shailesh/ekf_ws/src/moons_hardware/include/**",
+        "/home/shailesh/ekf_ws/src/my_robot_bringup/include/**",
+        "/usr/include/**",
+        "/home/shailesh/ekf_ws/src/moons_hardware/include/moons_hardware/**",
+        "/home/shailesh/ekf_ws/src/moons_hardware/include/moons_hardware/**",
+        "/home/shailesh/ekf_ws/src/my_robot_hardware/include/my_robot_hardware/**",
+        "/home/shailesh/ekf_ws/src/my_robot_hardware/include/my_robot_hardware/**",
+        "${workspaceFolder}/**",
+        "/opt/ros/humble/include",
+        "${workspaceFolder}/install/**",
+        "/usr/include",
+        "/home/shailesh/ekf_ws/src/my_robot_hardware/src/**"
+      ],
+      "browse": {
+        "limitSymbolsToIncludedHeaders": false
+      }
+    }
+  ]
+}
+
+
+// {
+//   "configurations": [
+//     {
+//       "browse": {
+//         "databaseFilename": "${default}",
+//         "limitSymbolsToIncludedHeaders": false
+//       },
+//       "includePath": [
+//         "/home/shailesh/turtulebot3_ws/install/turtlebot3_gazebo/include/**",
+//         "/home/shailesh/turtulebot3_ws/install/turtlebot3_fake_node/include/**",
+//         "/opt/ros/humble/include/**",
+//         "/home/shailesh/ekf_ws/src/moons_hardware/include/**",
+//         "/home/shailesh/ekf_ws/src/my_robot_bringup/include/**",
+//         "/usr/include/**",
+//         "/home/shailesh/ekf_ws/src/moons_hardware/include/moons_hardware/**",
+//         "/home/shailesh/ekf_ws/src/moons_hardware/include/moons_hardware/**",
+//         "/home/shailesh/ekf_ws/src/my_robot_hardware/include/my_robot_hardware/**",
+//         "/home/shailesh/ekf_ws/src/my_robot_hardware/include/my_robot_hardware/**"
+//       ],
+//       "name": "ROS",
+//       "intelliSenseMode": "gcc-x64",
+//       "compilerPath": "/usr/bin/gcc",
+//       "cStandard": "gnu11",
+//       "cppStandard": "c++14"
+//     }
+//   ],
+//   "version": 4
+// }

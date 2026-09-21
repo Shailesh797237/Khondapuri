@@ -1,0 +1,29 @@
+waypoints:
+# ── WP7: (0.41, -3.27) ──────────────────────────────
+- x:           0.41
+  y:           -3.27
+  theta:       3.141593
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+
+# ── WP8: (-0.68, -3.27) ──────────────────────────────
+- x:           -1.15
+  y:           -3.27
+  theta:       1.588599
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+
+# ── WP9: (-0.7, -2.15) ──────────────────────────────
+- x:           -1.15
+  y:           -2.15
+  theta:       1.559103
+  type:        station
+  mission:     forward
+  rotation:    auto
+  speed:       0.15
+
+

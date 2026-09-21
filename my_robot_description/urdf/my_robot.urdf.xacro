@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot name="my_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- <xacro:include filename="common_properties.xacro" />
+    <xacro:include filename="mobile_base.xacro" /> -->
+    <xacro:include filename="mobile_base_ros2_control.xacro" />
+    <xacro:include filename="01-myfirst_backup.urdf" />
+    <xacro:property name="base_length" value="0.85"/>
+    <xacro:property name="base_width"  value="0.72"/>
+    <xacro:property name="base_height" value="0.334"/>
+
+
+    <!-- <xacro:include filename="arm.xacro"/>
+
+    <joint name="mobile_base_arm_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="arm_base_link" />
+        <origin xyz="${base_length / 4.0} 0 ${base_height}" rpy="0 0 0" />
+    </joint> -->
+
+    <gazebo>
+        <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <parameters>$(find my_robot_bringup)/config/my_robot_controllers.yaml</parameters>
+        </plugin>
+    </gazebo>
+
+</robot>

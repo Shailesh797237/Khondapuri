@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Final adjusted URDF: small conservative wheel Z corrections applied.
+     Traction wheels lowered to Z=0.006 (was 0.018).
+     Idler wheels lowered to Z=0.001 (was 0.016).
+     Meshes remain rotated rpy="1.5708 0 0" (STL Y-up -> ROS Z-up).
+
+     ORIENTATION NOTE:
+     By REP-103 convention, the robot base_link frame is:
+       X = forward,  Y = left,  Z = up.
+     So:
+       - Forward motion  -> +X direction
+       - Reverse motion  -> -X direction
+       - Rotation (yaw)  -> around +Z axis
+-->
+
+<robot name="my_robot_description">
+
+    <!-- ================= MATERIAL DEFINITIONS ================= -->
+
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <material name="robot_blue">
+    <color rgba="0.25 0.55 0.95 1"/>
+  </material>
+
+  <material name="dark_blue">
+    <color rgba="0.1 0.25 0.6 1"/>
+  </material>
+
+  <material name="sensor_grey">
+    <color rgba="0.6 0.6 0.6 1"/>
+  </material>
+
+  
+
+  <!-- base_link is the reference frame for the robot.
+       X-forward, Y-left, Z-up in Gazebo/ROS.
+       All child joints/links are positioned relative to this. -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-0.00171603826927133 0.0853153097271832 -0.000800676203164504" rpy="0 0 0"/>
+      <mass value="16.5612318297859"/>
+      <inertia ixx="0.224777578722271" ixy="-0.000616146274190983" ixz="-0.0056215192978437" iyy="0.388496063536371" iyz="-3.99512855188338E-06" izz="0.189500864604573"/>
+    </inertial>
+    <visual>
+      <!-- Mesh is rotated so that STL's Y-up becomes ROS Z-up,
+           but the base_link frame orientation remains:
+           X-forward, Y-left, Z-up. -->
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/base_link.STL"/>
+      </geometry>
+      <material name="robot_blue"/>
+        <!--<color rgba="0.627450980392157 0.627450980392157 0.627450980392157 1"/>
+      </material> -->
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/base_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+
+
+
+  <!-- LEFT WHEEL -->
+  <link name="left_wheel">
+    <inertial>
+      <origin xyz="-4.86102390927402E-18 -2.77555756156289E-17 0.018" rpy="0 0 0"/>
+      <mass value="0.629371523823339"/>
+      <inertia ixx="0.000950217109279159" ixy="-1.03397576568769E-22" ixz="-2.20587260834219E-19" iyy="0.000950217109279159" iyz="-1.28431726174955E-18" izz="0.0017651847311782"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/left_wheel.STL"/>
+      </geometry>
+      <material name="robot_blue"/>
+        <!--<color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+      </material>  -->
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/left_wheel.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="leftwheel" type="continuous">
+    <!-- origin:
+         X = 0       -> centered in X
+         Y = +0.2475 -> wheel is on the LEFT side of base_link
+         Z = 0.006   -> slightly above ground
+    -->
+    <origin xyz="0 0.2475 0.006" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="left_wheel"/>
+
+    <!-- axis:
+         (0 1 0) means rotation about the +Y axis of this joint.
+         With ROS right-hand rule:
+           - Positive rotation about +Y causes wheel to roll.
+           - Together with the right wheel axis, this is chosen so that:
+               * Same-sign wheel velocities -> robot moves forward (+X).
+               * Opposite-sign velocities  -> robot rotates about Z.
+    -->
+    <axis xyz="0 1 0"/>
+  </joint>
+  <gazebo reference="left_wheel">
+    <!--  <material>Gazebo/robot_blue</material>  -->
+    <mu1>1.2</mu1>
+    <mu2>0.85</mu2>
+    <kp>100000</kp>
+    <kd>300</kd>
+  </gazebo>
+
+
+
+  <!-- RIGHT WHEEL -->
+  <link name="right_wheel">
+    <inertial>
+      <origin xyz="5.29136599575377E-18 2.77555756156289E-17 -0.018" rpy="0 0 0"/>
+      <mass value="0.629371523823339"/>
+      <inertia ixx="0.000950217109279159" ixy="-3.10192729707023E-22" ixz="-2.20587260834219E-19" iyy="0.000950217109279159" iyz="-1.28431726174955E-18" izz="0.0017651847311782"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/right_wheel.STL"/>
+      </geometry>
+      <material name="robot_blue"/>
+        <!-- <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+      </material> -->
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/right_wheel.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="rightwheel" type="continuous">
+    <!-- origin:
+         X = 0        -> centered in X
+         Y = -0.2475  -> wheel is on the RIGHT side of base_link
+         Z = 0.006    -> slightly above ground
+    -->
+    <origin xyz="0 -0.2475 0.006" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="right_wheel"/>
+
+    <!-- axis:
+         (0 -1 0) means rotation about the -Y axis.
+         This is the mirror of the left wheel axis.
+         Chosen so that:
+           - Giving both wheels the same angular speed
+             makes the robot translate along +X (forward).
+           - Giving equal and opposite speeds makes pure rotation
+             about +Z (yaw in place).
+    -->
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <gazebo reference="right_wheel">
+    <!--  <material>Gazebo/robot_blue</material>  -->
+    <mu1>1.2</mu1>
+    <mu2>0.85</mu2>
+    <kp>100000</kp>
+    <kd>300</kd>
+  </gazebo>
+
+  <!-- FRONT IDLER -->
+  <link name="front_idler">
+    <inertial>
+      <origin xyz="0 -2.77555756156289E-17 0.001" rpy="0 0 0"/>
+      <mass value="0.136405473352588"/>
+      <inertia ixx="5.93633237027116E-05" ixy="1.57986440750515E-35" ixz="-9.96330130772629E-21" iyy="5.93633237027116E-05" iyz="-5.79189852959948E-20" izz="9.61171104888997E-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/front_idler.STL"/>
+      </geometry>
+      <material name="dark_blue"/>
+        <!-- <color rgba="0 0.525490196078431 0.898039215686275 1"/>
+      </material>   -->
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/front_idler.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="frontidler" type="fixed">
+    <!-- origin: front idler, located forward in +X and slightly left in +Y -->
+    <origin xyz="0.37975 0.016 -0.032" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="front_idler"/>
+
+    <!-- Rotates about Y (0 1 0), but this idler typically free-spins
+         and does not drive the robot. It supports the track/contact. -->
+    <axis xyz="0 1 0"/>
+  </joint>
+  
+  <gazebo reference="front_idler">
+    <mu1>0.07</mu1>
+    <mu2>0.025</mu2>
+    <kp>35000</kp>
+    <kd>60</kd>
+  </gazebo>
+
+  <!-- BACK IDLER -->
+  <link name="back_idler">
+    <inertial>
+      <origin xyz="0 0 0.016" rpy="0 0 0"/>
+      <mass value="0.136405473352588"/>
+      <inertia ixx="5.93633237027116E-05" ixy="-4.81482486096809E-35" ixz="-9.96330130772647E-21" iyy="5.93633237027116E-05" iyz="4.93687110806939E-35" izz="9.61171104888997E-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/back_idler.STL"/>
+      </geometry>
+      <material name="dark_blue"/>
+        <!-- <color rgba="0 0.525490196078431 0.898039215686275 1"/>
+      </material>  -->
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/back_idler.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="backidler" type="fixed">
+    <!-- origin: back idler, located backward in -X and slightly left in +Y -->
+    <origin xyz="-0.379769457004097 0.016 -0.032" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="back_idler"/>
+
+    <!-- Same comment as front idler: rotates about Y, non-driven. -->
+    <axis xyz="0 1 0"/>
+  </joint>
+  
+   <!-- 🔹 Gazebo contact parameters for BACK IDLER -->
+  <gazebo reference="back_idler">
+  <!-- wheel rolling direction  coefficient of friction-->
+    <mu1>0.07</mu1>
+    <!-- sideway friction direction -->
+    <mu2>0.025</mu2>
+    <kp>35000</kp>
+    <kd>60</kd>
+  </gazebo>
+  
+  
+
+  <!-- FRONT LIDAR -->
+  <link name="front_lidar">
+    <inertial>
+      <origin xyz="4.30216432249497E-05 0.0335592346886809 -0.000111250752808989" rpy="0 0 0"/>
+      <mass value="0.592505826671524"/>
+      <inertia ixx="0.000708906574674729" ixy="8.58405404615259E-07" ixz="-9.69106220398094E-07" iyy="0.000809301043148306" iyz="-1.40436062874122E-06" izz="0.000706285346446156"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/front_lidar.STL"/>
+      </geometry>
+      <material name="sensor_grey"/>
+        <!-- <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+      </material>  -->
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/front_lidar.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="frontlidar" type="fixed">
+    <!-- Front lidar is fixed at +X, +Y relative to base_link. -->
+    <!--<origin xyz="0.35536 0.28336 0.0265" rpy="0 0 0"/>     -->
+    <origin xyz="0.35536 0.28336 0.0265" rpy="0 0 0.7854"/>
+    <parent link="base_link"/>
+    <child link="front_lidar"/>
+  </joint>
+
+  <!-- BACK LIDAR -->
+  <link name="back_lidar">
+    <inertial>
+      <origin xyz="-4.30217300159685E-05 0.0335592343796889 0.000111250728658474" rpy="0 0 0"/>
+      <mass value="0.592505821642753"/>
+      <inertia ixx="0.000708906567606319" ixy="-8.58403428185013E-07" ixz="-9.69106406372886E-07" iyy="0.000809301041868691" iyz="1.40436117851442E-06" izz="0.000706285338313236"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/back_lidar.STL"/>
+      </geometry>
+      <material name="sensor_grey"/>
+        <!-- <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+      </material>  -->
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/back_lidar.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="backlidar" type="fixed">
+    <!-- Back lidar is fixed at -X, -Y relative to base_link. -->
+    <!--<origin xyz="-0.35538 -0.28336 0.0265" rpy="0 0 0"/>    -->
+    <origin xyz="-0.35538 -0.28336 0.0265" rpy="0 0 -2.3562"/>
+    
+    <parent link="base_link"/>
+    <child link="back_lidar"/>
+  </joint>
+  
+  
+
+  <!-- IMU SENSOR -->
+  <link name="imu_sensor">
+    <inertial>
+      <origin xyz="-0.000262332604244328 0.00300158759182849 9.60004347326174E-06" rpy="0 0 0"/>
+      <mass value="0.00312469138199262"/>
+      <inertia ixx="2.01961457161673E-07" ixy="-2.9219277612664E-10" ixz="-2.86844138471051E-09" iyy="6.16644870363016E-07" iyz="3.13383409679242E-10" izz="4.4975616296578E-07"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/imu_sensor.STL"/>
+      </geometry>
+      <material name="sensor_grey"/>
+        <!-- <color rgba="0.690196078431373 0.690196078431373 0.690196078431373 1"/>
+      </material>  -->
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/imu_sensor.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="imusensor" type="fixed">
+    <!-- IMU is placed near the origin of base_link, fixed (no rotation). -->
+    <origin xyz="0.00020298 0.000029087 0.240" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="imu_sensor"/>
+  </joint>
+
+  <!-- LIVOX MID-360 LIDAR -->
+  <link name="livox_frame">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.43"/> <!-- Approximate mass of Mid-360 is 430g -->
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.0325" length="0.065"/>
+      </geometry>
+      <material name="sensor_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.0325" length="0.065"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="livox_joint" type="fixed">
+    <!-- Center of the robot (X=0, Y=0), Z = 334 mm = 0.334 m -->
+    <origin xyz="0.0 0.0 0.334" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="livox_frame"/>
+  </joint>
+
+
+  <!-- 🔹 Gazebo color override for base_link -->
+  <gazebo reference="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/base_link.STL"/>
+      </geometry>
+      <material>
+        <ambient>0.15 0.55 0.95 1</ambient>
+        <diffuse>0.25 0.55 0.95 1</diffuse>
+      </material>
+    </visual>
+  </gazebo>
+
+  <!-- Gazebo diff drive plugin
+       This defines how the robot moves in simulation.
+
+       IMPORTANT ORIENTATION NOTES:
+       - Forward  movement:  cmd_vel.linear.x  > 0  -> move along +X (forward)
+       - Reverse movement:  cmd_vel.linear.x  < 0  -> move along -X (backward)
+       - Rotation (yaw):   cmd_vel.angular.z > 0  -> rotate CCW (turn left) about +Z
+                           cmd_vel.angular.z < 0  -> rotate CW  (turn right) about +Z
+  -->
+  
+    
+
+  
+  
+
+</robot>
