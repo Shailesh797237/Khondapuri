@@ -115,8 +115,8 @@ private:
   static constexpr int STO_POLL_EVERY_N = 33;  // 33 cycles × ~30ms ≈ 1 seconds
 
   // ===== Skip redundant speed writes =====
-  int prev_final_left_rpm_ = 0;
-  int prev_final_right_rpm_ = 0;
+  int prev_final_left_rpm_ = -999999;
+  int prev_final_right_rpm_ = -999999;
 
   // ===== PLC S7 — STO double confirmation =====
   //  Read  DB1.DBX1.5 → STO trigger confirmation from PLC

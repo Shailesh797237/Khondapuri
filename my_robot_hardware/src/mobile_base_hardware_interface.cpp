@@ -153,6 +153,13 @@ MobileBaseHardwareInterface::on_activate(
   usleep(500000);
   driver_->enableJogMode();
   usleep(200000);
+  driver_->setJogSpeed(0, 0);
+  usleep(100000);
+
+  left_cmd_  = 0.0;
+  right_cmd_ = 0.0;
+  prev_final_left_rpm_  = -999999;
+  prev_final_right_rpm_ = -999999;
 
   prev_left_encoder_  = driver_->readEncoder(left_slave_);
   prev_right_encoder_ = driver_->readEncoder(right_slave_);
