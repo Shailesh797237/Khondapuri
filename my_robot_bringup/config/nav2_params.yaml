@@ -18,18 +18,18 @@ amcl:
 
     laser_model_type: "likelihood_field"
 
-    max_beams: 60
+    max_beams: 120
     laser_max_range: 100.0
     laser_min_range: 0.2
 
-    min_particles: 1000
-    max_particles: 4000
+    min_particles: 3000
+    max_particles: 15000
 
     pf_err: 0.05
     pf_z: 0.99
 
-    update_min_d: 0.15
-    update_min_a: 0.1
+    update_min_d: 0.0
+    update_min_a: 0.0
 
     resample_interval: 1
 

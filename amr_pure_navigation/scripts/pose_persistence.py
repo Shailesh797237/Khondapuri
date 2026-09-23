@@ -1,32 +1,14 @@
 #!/usr/bin/env python3
 # ================================================================
-#  pose_persistence.py
+#  pose_persistence.py  —  Full-Map Scan-Match Relocalizer
 #
-#  Saves the robot's AMCL pose to a file periodically (every 5s).
-#  On startup, restores the last known pose by publishing to
-#  /initialpose — so AMCL initializes at the saved position.
-#
-#  This eliminates manual re-localization after every robot restart!
-#
-#  FLOW:
-#    1. On startup: read saved pose from YAML → publish /initialpose
-#    2. During operation: subscribe /amcl_pose → save to YAML every 5s
-#    3. On shutdown: final save of last pose
-#    4. Next startup: automatically restore → no manual localization!
-#
-#  FIRST-TIME USE:
-#    - If no saved pose file exists, the user must localize manually
-#      once via RViz "2D Pose Estimate". After that, it's automatic.
-#
-#  USAGE:
-#    ros2 run amr_pure_navigation pose_persistence
-#    OR included in navigation.launch.py (automatic)
-#
-#  PARAMETERS:
-#    pose_file     : path to save/load pose (default: ~/.ros/last_robot_pose.yaml)
-#    save_interval : seconds between saves (default: 5.0)
-#    max_pose_age  : max age in hours before pose is considered stale (default: 720 = 30 days)
-#    restore_delay : seconds to wait after startup before publishing initial pose (default: 10.0)
+#  1. Restores last saved AMCL pose on startup.
+#  2. Validates restored pose by matching LiDAR scan to map.
+#  3. If mismatch detected (robot was moved), searches the ENTIRE MAP
+#     to find the true robot location using 2-phase grid search:
+#       Phase 1: Coarse search across full map (0.5m steps, 30° angles)
+#       Phase 2: Fine search around best hit (0.1m steps, 5° angles)
+#  4. Saves pose to YAML every 5s during normal operation.
 # ================================================================
 
 import os
@@ -39,7 +21,10 @@ from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from geometry_msgs.msg import PoseWithCovarianceStamped
+from nav_msgs.msg import OccupancyGrid
+from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
+from std_srvs.srv import Empty
 
 
 class PosePersistence(Node):
@@ -49,30 +34,34 @@ class PosePersistence(Node):
         # ── Parameters ────────────────────────────────────────────
         self.declare_parameter('pose_file',
             '/home/taikisha/turn_ws/src/amr_pure_navigation/config/last_robot_pose.yaml')
-        self.declare_parameter('save_interval', 5.0)       # save every 5 seconds
-        self.declare_parameter('max_pose_age', 720.0)       # hours (30 days)
-        self.declare_parameter('restore_delay', 10.0)       # seconds after start
+        self.declare_parameter('save_interval', 5.0)
+        self.declare_parameter('max_pose_age', 720.0)
+        self.declare_parameter('restore_delay', 3.0)
+        self.declare_parameter('match_threshold', 0.45)
 
-        self.pose_file     = self.get_parameter('pose_file').get_parameter_value().string_value
-        self.save_interval = self.get_parameter('save_interval').get_parameter_value().double_value
-        self.max_pose_age  = self.get_parameter('max_pose_age').get_parameter_value().double_value
-        self.restore_delay = self.get_parameter('restore_delay').get_parameter_value().double_value
+        self.pose_file       = self.get_parameter('pose_file').get_parameter_value().string_value
+        self.save_interval   = self.get_parameter('save_interval').get_parameter_value().double_value
+        self.max_pose_age    = self.get_parameter('max_pose_age').get_parameter_value().double_value
+        self.restore_delay   = self.get_parameter('restore_delay').get_parameter_value().double_value
+        self.match_threshold = self.get_parameter('match_threshold').get_parameter_value().double_value
 
         # ── State ─────────────────────────────────────────────────
-        self.last_pose = None           # latest PoseWithCovarianceStamped
-        self.pose_received = False      # have we received any AMCL pose?
-        self.pose_restored = False      # have we published the saved pose?
-        self.last_save_time = 0.0       # last time we saved to file
+        self.last_pose = None
+        self.latest_map = None
+        self.latest_scan = None
+        self.pose_received = False
+        self.pose_restored = False
+        self.last_save_time = 0.0
+        self.relocalizing = False
+        self._verified = False
+        self._verify_attempts = 0
 
         # ── Ensure directory exists ───────────────────────────────
         pose_dir = os.path.dirname(self.pose_file)
         if pose_dir and not os.path.exists(pose_dir):
             os.makedirs(pose_dir, exist_ok=True)
-            self.get_logger().info(f'Created directory: {pose_dir}')
 
-        # ── Publisher: /initialpose (same type AMCL expects) ──────
-        # Use transient_local durability so AMCL gets the message
-        # even if it subscribes slightly after we publish
+        # ── Publisher: /initialpose ────────────────────────────────
         qos_initial = QoSProfile(
             depth=1,
             reliability=ReliabilityPolicy.RELIABLE,
@@ -84,10 +73,10 @@ class PosePersistence(Node):
             qos_initial
         )
 
-        # ── Status publisher ──────────────────────────────────────
         self.status_pub = self.create_publisher(String, '/pose_persistence_status', 10)
+        self.global_loc_client = self.create_client(Empty, '/reinitialize_global_localization')
 
-        # ── Subscriber: /amcl_pose ────────────────────────────────
+        # ── Subscribers ───────────────────────────────────────────
         self.amcl_sub = self.create_subscription(
             PoseWithCovarianceStamped,
             '/amcl_pose',
@@ -95,138 +84,361 @@ class PosePersistence(Node):
             10
         )
 
-        # ── Timer: periodic save ──────────────────────────────────
-        self.save_timer = self.create_timer(self.save_interval, self.save_timer_callback)
+        # /map uses transient_local (latched from map_server)
+        qos_map = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL
+        )
+        self.map_sub = self.create_subscription(
+            OccupancyGrid,
+            '/map',
+            self.map_callback,
+            qos_map
+        )
 
-        # ── Timer: delayed restore (one-shot after restore_delay) ─
+        # /scan uses best_effort (sensor driver default)
+        qos_scan = QoSProfile(
+            depth=5,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE
+        )
+        self.scan_sub = self.create_subscription(
+            LaserScan,
+            '/scan',
+            self.scan_callback,
+            qos_scan
+        )
+
+        # ── Timers ────────────────────────────────────────────────
+        self.save_timer = self.create_timer(self.save_interval, self.save_timer_callback)
         self.restore_timer = self.create_timer(self.restore_delay, self.restore_pose_callback)
 
         self.get_logger().info('═══════════════════════════════════════════')
-        self.get_logger().info('  📍 Pose Persistence Node Started')
-        self.get_logger().info(f'  Pose file    : {self.pose_file}')
-        self.get_logger().info(f'  Save interval: {self.save_interval}s')
-        self.get_logger().info(f'  Max pose age : {self.max_pose_age}h')
-        self.get_logger().info(f'  Restore delay: {self.restore_delay}s')
-
-        if os.path.exists(self.pose_file):
-            self.get_logger().info(f'  ✅ Saved pose file FOUND — will restore in {self.restore_delay}s')
-        else:
-            self.get_logger().warn('  ⚠ No saved pose file — manual localization needed first time')
-
+        self.get_logger().info('  📍 Pose Persistence & Full-Map Relocalizer')
+        self.get_logger().info(f'  Pose file       : {self.pose_file}')
+        self.get_logger().info(f'  Match Threshold : {self.match_threshold * 100.0:.0f}%')
+        self.get_logger().info(f'  Restore delay   : {self.restore_delay}s')
         self.get_logger().info('═══════════════════════════════════════════')
 
-    # ── AMCL Pose Callback ────────────────────────────────────────
+    # ── Callbacks ─────────────────────────────────────────────────
+
     def amcl_callback(self, msg):
-        """Store the latest AMCL pose for periodic saving."""
         self.last_pose = msg
         if not self.pose_received:
             self.pose_received = True
             x = msg.pose.pose.position.x
             y = msg.pose.pose.position.y
             yaw = self._quaternion_to_yaw(msg.pose.pose.orientation)
-            self.get_logger().info(
-                f'✅ First AMCL pose received: x={x:.3f} y={y:.3f} yaw={math.degrees(yaw):.1f}°')
+            self.get_logger().info(f'✅ AMCL Pose active: x={x:.3f} y={y:.3f} yaw={math.degrees(yaw):.1f}°')
 
-    # ── Periodic Save Timer ───────────────────────────────────────
+    def map_callback(self, msg):
+        if self.latest_map is None:
+            self.get_logger().info(f'📌 Map received: {msg.info.width}x{msg.info.height} @ {msg.info.resolution:.3f}m/pix')
+        self.latest_map = msg
+
+    def scan_callback(self, msg):
+        self.latest_scan = msg
+
     def save_timer_callback(self):
-        """Save the current pose to file periodically."""
-        if self.last_pose is None:
-            return  # no pose to save yet
-
+        if self.last_pose is None or self.relocalizing:
+            return
         now = time.time()
-        # Throttle saves to avoid excessive disk writes
         if (now - self.last_save_time) < (self.save_interval - 0.5):
             return
-
         self._save_pose_to_file(self.last_pose)
         self.last_save_time = now
 
-    # ── Restore Pose (delayed one-shot) ───────────────────────────
-    def restore_pose_callback(self):
-        """
-        Called once after restore_delay seconds.
-        Reads the saved pose file and publishes to /initialpose.
-        Then cancels itself (one-shot behavior).
-        """
-        # Cancel the timer so it doesn't fire again
-        self.restore_timer.cancel()
+    # ── Restore & Verify ──────────────────────────────────────────
 
+    def restore_pose_callback(self):
+        self.restore_timer.cancel()
         if self.pose_restored:
             return
 
-        if self.pose_received:
-            # AMCL already has a pose (maybe user already localized manually)
-            self.get_logger().info(
-                '📍 AMCL already has a pose — skipping restore from file')
-            self.pose_restored = True
-            self._publish_status('AMCL already localized — pose restore skipped')
-            return
-
-        # Try to load saved pose
         pose_data = self._load_pose_from_file()
         if pose_data is None:
-            self.get_logger().warn(
-                '⚠ No saved pose available — please localize manually via RViz "2D Pose Estimate"')
-            self._publish_status('NO_SAVED_POSE — manual localization required')
+            self.get_logger().warn('⚠ No saved pose — manual localization required')
             return
 
-        # Check pose age
         saved_time = pose_data.get('timestamp', 0)
         age_hours = (time.time() - saved_time) / 3600.0
 
         if age_hours > self.max_pose_age:
-            self.get_logger().warn(
-                f'⚠ Saved pose is {age_hours:.1f} hours old (max={self.max_pose_age}h) — '
-                f'ignoring stale pose. Please localize manually.')
-            self._publish_status(f'STALE_POSE ({age_hours:.0f}h old) — manual localization required')
+            self.get_logger().warn(f'⚠ Saved pose is stale ({age_hours:.1f}h old)')
             return
 
-        # Build the /initialpose message
+        self._publish_initial_pose(pose_data['x'], pose_data['y'], pose_data['qz'], pose_data['qw'])
+        self.pose_restored = True
+        self.get_logger().info('🎯 Restored saved pose. Waiting for map & scan to verify...')
+
+        # Retry verification every 2s until map+scan are ready
+        self._verify_timer = self.create_timer(2.0, self.verify_and_relocalize_callback)
+
+    def verify_and_relocalize_callback(self):
+        if self._verified:
+            if hasattr(self, '_verify_timer'):
+                self._verify_timer.cancel()
+            return
+
+        self._verify_attempts += 1
+
+        # Wait for data
+        if self.latest_map is None or self.latest_scan is None:
+            missing = []
+            if self.latest_map is None:
+                missing.append('/map')
+            if self.latest_scan is None:
+                missing.append('/scan')
+            self.get_logger().warn(
+                f'⏳ Attempt {self._verify_attempts}/15: Waiting for {", ".join(missing)}...')
+            if self._verify_attempts >= 15:
+                self.get_logger().error('❌ Map/Scan not available after 30s. Skipping verification.')
+                self._verified = True
+                self._verify_timer.cancel()
+            return
+
+        # Data ready — run verification
+        self._verified = True
+        self._verify_timer.cancel()
+
+        if self.last_pose is None:
+            self.get_logger().warn('⚠ No AMCL pose yet — cannot verify.')
+            return
+
+        px = self.last_pose.pose.pose.position.x
+        py = self.last_pose.pose.pose.position.y
+        yaw = self._quaternion_to_yaw(self.last_pose.pose.pose.orientation)
+        score = self.compute_scan_match_score(px, py, yaw)
+
+        if score is None:
+            self.get_logger().warn('⚠ Score computation failed.')
+            return
+
+        self.get_logger().info(f'📊 Scan-to-Map Match: {score * 100.0:.1f}% (need {self.match_threshold * 100.0:.0f}%)')
+
+        if score >= self.match_threshold:
+            self.get_logger().info(f'✅ Pose VALIDATED! Scan alignment is good ({score * 100.0:.1f}%).')
+            self._publish_status('POSE_VALIDATED')
+        else:
+            self.get_logger().warn(f'⚠️ MISMATCHED! ({score * 100.0:.1f}%) Robot was physically moved!')
+            self.get_logger().info('🔍 Searching ENTIRE MAP for true robot location...')
+            self._publish_status('DELOCALIZED — FULL MAP SEARCH STARTING')
+            self.perform_full_map_relocalization()
+
+    # ── Scan-to-Map Matching ──────────────────────────────────────
+
+    def compute_scan_match_score(self, px, py, yaw):
+        if self.latest_map is None or self.latest_scan is None:
+            return None
+
+        map_info = self.latest_map.info
+        width = map_info.width
+        height = map_info.height
+        res = map_info.resolution
+        ox = map_info.origin.position.x
+        oy = map_info.origin.position.y
+        data = self.latest_map.data
+
+        scan = self.latest_scan
+        valid_beams = 0
+        matched_beams = 0
+
+        angle = scan.angle_min
+        stride = 3  # denser sampling for better accuracy
+
+        cos_yaw = math.cos(yaw)
+        sin_yaw = math.sin(yaw)
+
+        for i in range(0, len(scan.ranges), stride):
+            r = scan.ranges[i]
+            if math.isfinite(r) and scan.range_min <= r <= scan.range_max:
+                lx = r * math.cos(angle)
+                ly = r * math.sin(angle)
+
+                mx = px + cos_yaw * lx - sin_yaw * ly
+                my = py + sin_yaw * lx + cos_yaw * ly
+
+                gx = int((mx - ox) / res)
+                gy = int((my - oy) / res)
+
+                # Count ALL valid beams including off-map (off-map = miss)
+                valid_beams += 1
+
+                if 0 <= gx < width and 0 <= gy < height:
+                    matched = False
+                    # Tight 1-cell tolerance only (~3cm)
+                    for dx in range(-1, 2):
+                        for dy in range(-1, 2):
+                            cx, cy = gx + dx, gy + dy
+                            if 0 <= cx < width and 0 <= cy < height:
+                                if data[cy * width + cx] >= 50:
+                                    matched = True
+                                    break
+                        if matched:
+                            break
+
+                    if matched:
+                        # Check beam doesn't pass through walls (ray-through-wall penalty)
+                        ray_blocked = False
+                        check_dist = min(r, 3.0)  # check up to 3m along ray
+                        step_m = res * 2  # check every 2 cells along ray
+                        for d in [step_m * s for s in range(1, int(check_dist / step_m))]:
+                            rlx = d * math.cos(angle)
+                            rly = d * math.sin(angle)
+                            rmx = px + cos_yaw * rlx - sin_yaw * rly
+                            rmy = py + sin_yaw * rlx + cos_yaw * rly
+                            rgx = int((rmx - ox) / res)
+                            rgy = int((rmy - oy) / res)
+                            if 0 <= rgx < width and 0 <= rgy < height:
+                                if data[rgy * width + rgx] >= 50:
+                                    ray_blocked = True
+                                    break
+                        if not ray_blocked:
+                            matched_beams += 1
+                    # else: on-map but no wall nearby = miss (valid but not matched)
+                # else: off-map = miss (valid but not matched)
+
+            angle += scan.angle_increment * stride
+
+        if valid_beams < 20:
+            return 0.0
+        return float(matched_beams) / float(valid_beams)
+
+    # ── Full Map 2-Phase Relocalization ───────────────────────────
+
+    def perform_full_map_relocalization(self):
+        self.relocalizing = True
+
+        map_info = self.latest_map.info
+        width = map_info.width
+        height = map_info.height
+        res = map_info.resolution
+        ox = map_info.origin.position.x
+        oy = map_info.origin.position.y
+        data = self.latest_map.data
+
+        # Calculate map bounds in meters
+        map_x_min = ox
+        map_x_max = ox + width * res
+        map_y_min = oy
+        map_y_max = oy + height * res
+
+        self.get_logger().info(f'📐 Map bounds: x=[{map_x_min:.1f}, {map_x_max:.1f}] y=[{map_y_min:.1f}, {map_y_max:.1f}]')
+
+        # ════════════════════════════════════════════════════════
+        # PHASE 1: Coarse search across ENTIRE map
+        #   Step: 0.5m spatial, 30° angular
+        # ════════════════════════════════════════════════════════
+        coarse_step = 0.5
+        coarse_headings = [math.radians(deg) for deg in range(0, 360, 30)]
+
+        best_score = -1.0
+        best_x, best_y, best_yaw = 0.0, 0.0, 0.0
+        candidates_checked = 0
+
+        # Build list of free-space positions (skip walls and unknown)
+        free_positions = []
+        cell_step = int(coarse_step / res)
+        if cell_step < 1:
+            cell_step = 1
+
+        for gx in range(0, width, cell_step):
+            for gy in range(0, height, cell_step):
+                cell_val = data[gy * width + gx]
+                if cell_val == 0:  # free space only
+                    wx = ox + gx * res
+                    wy = oy + gy * res
+                    free_positions.append((wx, wy))
+
+        self.get_logger().info(f'🔎 PHASE 1: Coarse search — {len(free_positions)} free positions × {len(coarse_headings)} angles = {len(free_positions) * len(coarse_headings)} candidates')
+
+        for (wx, wy) in free_positions:
+            for yaw in coarse_headings:
+                score = self.compute_scan_match_score(wx, wy, yaw)
+                candidates_checked += 1
+                if score is not None and score > best_score:
+                    best_score = score
+                    best_x, best_y, best_yaw = wx, wy, yaw
+
+        self.get_logger().info(f'🎯 Phase 1 best: x={best_x:.2f}, y={best_y:.2f}, yaw={math.degrees(best_yaw):.1f}° (Score: {best_score*100.0:.1f}%)')
+
+        # ════════════════════════════════════════════════════════
+        # PHASE 2: Fine search around best Phase 1 result
+        #   Step: 0.1m spatial, 5° angular, ±0.5m range
+        # ════════════════════════════════════════════════════════
+        if best_score > 0.10:
+            fine_step = 0.10
+            fine_range = 0.6
+            fine_headings = [best_yaw + math.radians(d) for d in range(-30, 31, 5)]
+
+            fine_x = [best_x + i * fine_step for i in range(-int(fine_range/fine_step), int(fine_range/fine_step) + 1)]
+            fine_y = [best_y + i * fine_step for i in range(-int(fine_range/fine_step), int(fine_range/fine_step) + 1)]
+
+            self.get_logger().info(f'🔬 PHASE 2: Fine search — {len(fine_x)}×{len(fine_y)}×{len(fine_headings)} = {len(fine_x)*len(fine_y)*len(fine_headings)} candidates around best hit')
+
+            for x in fine_x:
+                for y in fine_y:
+                    for yaw in fine_headings:
+                        score = self.compute_scan_match_score(x, y, yaw)
+                        if score is not None and score > best_score:
+                            best_score = score
+                            best_x, best_y, best_yaw = x, y, yaw
+
+            self.get_logger().info(f'🎯 Phase 2 best: x={best_x:.3f}, y={best_y:.3f}, yaw={math.degrees(best_yaw):.1f}° (Score: {best_score*100.0:.1f}%)')
+
+        # ════════════════════════════════════════════════════════
+        # Apply result
+        # ════════════════════════════════════════════════════════
+        if best_score >= self.match_threshold:
+            qz = math.sin(best_yaw / 2.0)
+            qw = math.cos(best_yaw / 2.0)
+            self._publish_initial_pose(best_x, best_y, qz, qw)
+            self.get_logger().info('═══════════════════════════════════════════')
+            self.get_logger().info(f'  ✅ ROBOT FOUND! Pose updated to AMCL')
+            self.get_logger().info(f'  x   = {best_x:.3f}')
+            self.get_logger().info(f'  y   = {best_y:.3f}')
+            self.get_logger().info(f'  yaw = {math.degrees(best_yaw):.1f}°')
+            self.get_logger().info(f'  Score = {best_score*100.0:.1f}%')
+            self.get_logger().info('═══════════════════════════════════════════')
+            self._publish_status(f'RELOCALIZED x={best_x:.2f} y={best_y:.2f} score={best_score*100.0:.0f}%')
+        else:
+            self.get_logger().warn(f'⚠ Full map search best score only {best_score*100.0:.1f}%. Falling back to AMCL 15k global...')
+            if self.global_loc_client.wait_for_service(timeout_sec=1.0):
+                self.global_loc_client.call_async(Empty.Request())
+                self.get_logger().info('⚡ AMCL 15k particle global relocalization triggered!')
+            self._publish_status('GLOBAL_RELOCALIZATION_TRIGGERED')
+
+        self.relocalizing = False
+
+    # ── Publish /initialpose ──────────────────────────────────────
+
+    def _publish_initial_pose(self, x, y, qz, qw):
         msg = PoseWithCovarianceStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = 'map'
+        msg.pose.pose.position.x = float(x)
+        msg.pose.pose.position.y = float(y)
+        msg.pose.pose.position.z = 0.0
+        msg.pose.pose.orientation.x = 0.0
+        msg.pose.pose.orientation.y = 0.0
+        msg.pose.pose.orientation.z = float(qz)
+        msg.pose.pose.orientation.w = float(qw)
 
-        msg.pose.pose.position.x = float(pose_data['x'])
-        msg.pose.pose.position.y = float(pose_data['y'])
-        msg.pose.pose.position.z = float(pose_data.get('z', 0.0))
-
-        msg.pose.pose.orientation.x = float(pose_data.get('qx', 0.0))
-        msg.pose.pose.orientation.y = float(pose_data.get('qy', 0.0))
-        msg.pose.pose.orientation.z = float(pose_data['qz'])
-        msg.pose.pose.orientation.w = float(pose_data['qw'])
-
-        # Set moderate covariance — AMCL will refine with laser scans
-        # Small enough to localize quickly, large enough for minor drift
         cov = [0.0] * 36
-        cov[0]  = 0.25  # x variance (0.5m std dev)
-        cov[7]  = 0.25  # y variance (0.5m std dev)
-        cov[35] = 0.07  # yaw variance (~15° std dev)
+        cov[0]  = 0.15   # tight x covariance
+        cov[7]  = 0.15   # tight y covariance
+        cov[35] = 0.04   # tight yaw covariance
         msg.pose.covariance = cov
 
-        # Publish multiple times to ensure AMCL receives it
-        for i in range(3):
+        for _ in range(3):
             msg.header.stamp = self.get_clock().now().to_msg()
             self.initial_pose_pub.publish(msg)
-            time.sleep(0.5)
+            time.sleep(0.3)
 
-        yaw = self._quaternion_to_yaw(msg.pose.pose.orientation)
-        self.pose_restored = True
+    # ── File I/O ──────────────────────────────────────────────────
 
-        self.get_logger().info('═══════════════════════════════════════════')
-        self.get_logger().info('  🎯 POSE RESTORED FROM FILE!')
-        self.get_logger().info(f'  x   = {pose_data["x"]:.3f}')
-        self.get_logger().info(f'  y   = {pose_data["y"]:.3f}')
-        self.get_logger().info(f'  yaw = {math.degrees(yaw):.1f}°')
-        self.get_logger().info(f'  Age = {age_hours:.1f} hours')
-        self.get_logger().info('  AMCL will refine position using laser scans...')
-        self.get_logger().info('═══════════════════════════════════════════')
-        self._publish_status(
-            f'POSE_RESTORED x={pose_data["x"]:.2f} y={pose_data["y"]:.2f} '
-            f'yaw={math.degrees(yaw):.1f}° age={age_hours:.1f}h')
-
-    # ── Save Pose to YAML File ────────────────────────────────────
     def _save_pose_to_file(self, msg):
-        """Save the current AMCL pose to a YAML file."""
         try:
             pose_data = {
                 'timestamp': time.time(),
@@ -238,38 +450,22 @@ class PosePersistence(Node):
                 'qz': float(msg.pose.pose.orientation.z),
                 'qw': float(msg.pose.pose.orientation.w),
             }
-
-            # Write to temp file first, then rename (atomic write)
             tmp_file = self.pose_file + '.tmp'
             with open(tmp_file, 'w') as f:
-                f.write('# Auto-saved robot pose — DO NOT EDIT\n')
-                f.write(f'# Saved at: {time.strftime("%Y-%m-%d %H:%M:%S")}\n')
+                f.write('# Auto-saved robot pose\n')
                 yaml.dump(pose_data, f, default_flow_style=False)
-
             os.replace(tmp_file, self.pose_file)
-
-            yaw = self._quaternion_to_yaw(msg.pose.pose.orientation)
-            self.get_logger().debug(
-                f'💾 Pose saved: x={pose_data["x"]:.3f} y={pose_data["y"]:.3f} '
-                f'yaw={math.degrees(yaw):.1f}°')
-
         except Exception as e:
             self.get_logger().error(f'Failed to save pose: {e}')
 
-    # ── Load Pose from YAML File ──────────────────────────────────
     def _load_pose_from_file(self):
-        """Load the saved pose from the YAML file. Returns dict or None."""
         if not os.path.exists(self.pose_file):
             return None
-
         try:
             with open(self.pose_file, 'r') as f:
                 data = yaml.safe_load(f)
-
             if not data or not isinstance(data, dict):
                 return None
-
-            # Handle nested format: pose.position & pose.orientation
             if 'pose' in data and isinstance(data['pose'], dict):
                 pos = data['pose'].get('position', {})
                 ori = data['pose'].get('orientation', {})
@@ -283,38 +479,30 @@ class PosePersistence(Node):
                     'qw': float(ori.get('w', 1.0)),
                     'timestamp': float(data.get('timestamp', time.time()))
                 }
-
-            # Handle flat format: x, y, qz, qw
             required = ['x', 'y', 'qz', 'qw']
-            for key in required:
-                if key not in data:
-                    self.get_logger().error(f'Saved pose missing field: {key}')
+            for k in required:
+                if k not in data:
                     return None
-
             return data
-
         except Exception as e:
             self.get_logger().error(f'Failed to load pose file: {e}')
             return None
 
     # ── Helpers ───────────────────────────────────────────────────
+
     def _quaternion_to_yaw(self, q):
-        """Extract yaw from quaternion."""
         return math.atan2(
             2.0 * (q.w * q.z + q.x * q.y),
             1.0 - 2.0 * (q.y * q.y + q.z * q.z)
         )
 
     def _publish_status(self, text):
-        """Publish status message."""
         msg = String()
         msg.data = text
         self.status_pub.publish(msg)
 
     def destroy_node(self):
-        """On shutdown: save the final pose."""
-        if self.last_pose is not None:
-            self.get_logger().info('💾 Saving final pose before shutdown...')
+        if self.last_pose is not None and not self.relocalizing:
             self._save_pose_to_file(self.last_pose)
         super().destroy_node()
 
@@ -322,7 +510,6 @@ class PosePersistence(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = PosePersistence()
-
     try:
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):

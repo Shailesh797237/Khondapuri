@@ -26,14 +26,14 @@ amcl:
 
     # Laser model
     laser_model_type: "likelihood_field"
-    max_beams:        60
+    max_beams:        120
     laser_max_range:  10.0
     laser_min_range:  0.0
 
-    # Particle filter — MORE particles = more resilient after disturbances
-    min_particles: 1000         # was 500 — more particles survive STO events
-    max_particles: 5000         # was 2000 — wider search if delocalized
-    pf_err:        0.01         # was 0.05 — tighter error bound
+    # Particle filter — 15,000 particles for high density global localization
+    min_particles: 3000
+    max_particles: 15000
+    pf_err:        0.01
     pf_z:          0.99
 
     # Recovery — re-inject random particles when filter confidence drops
@@ -41,9 +41,10 @@ amcl:
     recovery_alpha_fast: 0.1    # fast average weight decay
     # When fast avg << slow avg, random particles are injected → helps recover
 
-    # Update thresholds — update AMCL more frequently for better tracking
-    update_min_d: 0.05          # was 0.10 — update after 5cm movement
-    update_min_a: 0.05          # was 0.10 — update after ~3° rotation
+    # Update thresholds — set to 0.0 so AMCL processes scans even while STATIONARY
+    # This is CRITICAL: without this, AMCL ignores all laser scans until robot moves!
+    update_min_d: 0.0           # process scans even without translation
+    update_min_a: 0.0           # process scans even without rotation
     resample_interval: 1
 
     # Sensor model weights
