@@ -1,0 +1,58 @@
+# Waypoint configuration
+
+waypoints:
+# ============================================================
+#  FORWARD PATH
+# ============================================================
+
+# ── WP1: (-0.72, 0.25) ──────────────────────────────
+- x:           -0.72
+  y:           0.25
+  theta:       6.270095
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+
+# ── WP2: (1.56, 0.22) ──────────────────────────────
+- x:           1.56
+  y:           0.22
+  theta:       6.224368
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+
+# ── WP3: (4.62, 0.04) ──────────────────────────────
+- x:           4.62
+  y:           0.04
+  theta:       0
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+
+# ============================================================
+#  REVERSE PATH
+# ============================================================
+
+# ── WP3: (4.62, 0.04) ──────────────────────────────
+- x:           4.62
+  y:           0.04
+  theta:       3.082775
+  type:        waypoint
+  mission:     reverse
+  rotation:    auto
+
+# ── WP2: (1.56, 0.22) ──────────────────────────────
+- x:           1.56
+  y:           0.22
+  theta:       3.128503
+  type:        waypoint
+  mission:     reverse
+  rotation:    auto
+
+# ── WP1: (-0.72, 0.25) ──────────────────────────────
+- x:           -0.72
+  y:           0.25
+  theta:       0
+  type:        waypoint
+  mission:     reverse
+  rotation:    auto

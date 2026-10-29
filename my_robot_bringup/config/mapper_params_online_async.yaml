@@ -203,7 +203,7 @@ slam_toolbox:
     resolution: 0.03
     # Map grid resolution (good balance of accuracy vs CPU)
 
-    max_laser_range: 8.0
+    max_laser_range: 20.0    #  8.0
     # INCREASED from 3.2 to 8.0
     # Allows lidar data from much further away → maps larger area
     # Set this to match your actual lidar's usable range

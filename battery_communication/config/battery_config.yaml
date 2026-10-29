@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    # Dedicated persistent udev symlink for Battery USB-CAN module
+    port: "/dev/battery_can"
+    # Fallback port if udev rule is not yet applied
+    fallback_port: "/dev/ttyUSB2"
+    # CAN Module Serial Baudrate
+    baudrate: 2000000
+    # Polling interval in seconds
+    poll_time_sec: 1.0
+    # ROS 2 Topic prefix
+    topic_prefix: "/battery"

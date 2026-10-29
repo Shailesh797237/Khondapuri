@@ -1,0 +1,11 @@
+# ================================================================
+#  tag_sequence.yaml
+#  Defines the physical linear order of all tags and curve waypoints.
+#  The navigation stack uses this sequence to parse "tagX to tagY"
+#  ranges and automatically generate the correct path.
+# ================================================================
+
+ordered_tags:
+  - st1
+  - way1
+  - st2

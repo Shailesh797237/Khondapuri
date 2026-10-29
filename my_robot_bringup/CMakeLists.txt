@@ -19,7 +19,9 @@ install(
 )
 
 install(
-  PROGRAMS scripts/scan_qos_relay.py
+  PROGRAMS
+    scripts/scan_qos_relay.py
+    scripts/save_dual_map.py
   DESTINATION lib/${PROJECT_NAME}/
 )
 

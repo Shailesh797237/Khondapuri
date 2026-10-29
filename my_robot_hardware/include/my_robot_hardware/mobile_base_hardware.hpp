@@ -11,20 +11,13 @@
 
 #include <std_msgs/msg/string.hpp>
 
-// ===== snap7 for PLC S7 communication (STO double confirmation) =====
-#ifdef __cplusplus
-extern "C" {
-#endif
-#include "snap7.h"
-#ifdef __cplusplus
-}
-#endif
-// ====================================================================
+// ===== Separate PLC STO handler (easy to change bit addresses) =====
+#include "my_robot_hardware/plc_sto_handler.hpp"
+// ===================================================================
 
 #include <vector>
 #include <memory>
 #include <string>
-#include <atomic>
 
 namespace mobile_base_hardware
 {
@@ -107,33 +100,18 @@ private:
   // ===== Error monitoring (40001) — check every 5th cycle =====
   int error_check_counter_ = 0;
   static constexpr int ERROR_CHECK_EVERY_N = 5;  // every 5th cycle (~150ms at 33Hz)
-  bool prev_error_was_2_ = false;
-  bool motors_disabled_ = false;  // true during STO + 2s cooldown — write() sends zero
+  bool motors_disabled_ = false;  // true during STO / recovery — write() sends zero
 
-  // ===== Throttle STO confirmation polling (~2s interval at 33 Hz) =====
+  // ===== Continuous PLC STO polling interval =====
   int sto_poll_counter_ = 0;
-  static constexpr int STO_POLL_EVERY_N = 33;  // 33 cycles × ~30ms ≈ 1 seconds
+  static constexpr int STO_POLL_EVERY_N = 5;  // every 5 cycles (~150ms at 33Hz)
 
   // ===== Skip redundant speed writes =====
   int prev_final_left_rpm_ = -999999;
   int prev_final_right_rpm_ = -999999;
 
-  // ===== PLC S7 — STO double confirmation =====
-  //  Read  DB1.DBX1.5 → STO trigger confirmation from PLC
-  //  Write DB3.DBX1.0 → one-shot trigger to PLC (acknowledge)
-  //  Reset DB1.DBX1.5 → clear confirmation after processing
-  S7Object  plc_client_     {0};
-  std::mutex plc_mutex_;
-  std::atomic<bool> plc_connected_ {false};
-
-  std::string plc_ip_   {"192.168.1.21"};
-  int plc_rack_         {0};
-  int plc_slot_         {1};
-
-  bool connectPLC();
-  void disconnectPLC();
-  bool plcReadBit (int db, int byte_offset, int bit_index, bool & value);
-  bool plcWriteBit(int db, int byte_offset, int bit_index, bool value);
+  // ===== PLC STO handler (separate module — easy to change addresses) =====
+  std::unique_ptr<PlcStoHandler> sto_handler_;
   // =============================================
 };
 

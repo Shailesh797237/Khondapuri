@@ -4,10 +4,9 @@
 
 waypoints:
 
-  - x:           1.94
-    y:           -0.17
-    theta:       0.13
+  - x:           3.38
+    y:            0.0
+    theta:       0.00
     type:        station
-    mission:     forward
+    mission:     reverse
     rotation:    auto
-

@@ -172,17 +172,41 @@ bool PlcStationMonitor::readBit(int db, int byte_offset, int bit_index, bool & v
 // the station name on /station_reached
 void PlcStationMonitor::stationCallback(const std_msgs::msg::String::SharedPtr msg)
 {
-  // Parse station name (format may be "STATION_A" or "STATION_A:I0.1")
+  // Parse station name and feedback input (format: "STATION_A:I0.4" or "STATION_A")
   std::string raw = msg->data;
   std::string name = raw;
+  std::string fb = "";
   auto colon = raw.find(':');
   if (colon != std::string::npos) {
     name = raw.substr(0, colon);
+    fb   = raw.substr(colon + 1);
+  }
+
+  // Parse feedback input if provided, e.g. "I0.4" -> byte 0, bit 4
+  if (!fb.empty() && (fb[0] == 'I' || fb[0] == 'i')) {
+    auto dot = fb.find('.');
+    if (dot != std::string::npos) {
+      try {
+        int byte_num = std::stoi(fb.substr(1, dot - 1));
+        int bit_num  = std::stoi(fb.substr(dot + 1));
+        if (bit_num >= 0 && bit_num <= 7 && byte_num >= 0) {
+          plc_byte_ = byte_num;
+          plc_bit_  = bit_num;
+          RCLCPP_INFO(get_logger(),
+            "🎯 Configured monitor from plc_feedback '%s' → DB%d.DBX%d.%d",
+            fb.c_str(), plc_db_, plc_byte_, plc_bit_);
+        }
+      } catch (const std::exception & e) {
+        RCLCPP_WARN(get_logger(),
+          "Failed to parse plc_feedback '%s': %s (using default DB%d.DBX%d.%d)",
+          fb.c_str(), e.what(), plc_db_, plc_byte_, plc_bit_);
+      }
+    }
   }
 
   RCLCPP_INFO(get_logger(),
-    "📍 Station [%s] reached — waiting for DB%d.DBX%d.%d = TRUE to publish /plc_done",
-    name.c_str(), plc_db_, plc_byte_, plc_bit_);
+    "📍 Station [%s] reached (feedback=%s) — waiting for DB%d.DBX%d.%d = TRUE to publish /plc_done",
+    name.c_str(), fb.empty() ? "default" : fb.c_str(), plc_db_, plc_byte_, plc_bit_);
 
   current_station_ = name;
   monitoring_      = true;

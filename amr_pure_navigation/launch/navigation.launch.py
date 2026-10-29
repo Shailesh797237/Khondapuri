@@ -24,7 +24,7 @@ def generate_launch_description():
 
         DeclareLaunchArgument(
             'map',
-            default_value='/home/taikisha/turn_ws/src/my_robot_description/rviz/taikisha.yaml'),
+            default_value='/home/taikisha/turn_ws/install/share/amr_pure_navigation/map'),
 
         DeclareLaunchArgument(
             'waypoints_file',
@@ -33,7 +33,7 @@ def generate_launch_description():
 
         DeclareLaunchArgument(
             'missions_folder',
-            default_value='/home/taikisha/turn_ws/src/amr_pure_navigation/config/missions',
+            default_value='/home/taikisha/turn_ws/install/share/amr_pure_navigation/config/missions',
             description='Path to folder with mission .yaml files (each file = one mission)'),
 
         DeclareLaunchArgument(
@@ -100,8 +100,8 @@ def generate_launch_description():
                     'odom_topic':        '/odometry/filtered',
                     'cmd_vel_topic':     '/cmd_vel',
                     'use_amcl':          True,
-                    'linear_speed':      0.20,
-                    'angular_speed':     0.10,
+                    'linear_speed':      0.30,
+                    'angular_speed':     0.15,
                     'drive_correction':  0.15,   # keeps RPM equal = straight line
                     'xy_tolerance':      0.10,
                     'yaw_tolerance':     0.08,
@@ -148,7 +148,7 @@ def generate_launch_description():
         ]),
 
         # ── 6. PLC Lidar Obstacle Monitor ──────────────────────────────
-        #  CONTINUOUSLY monitors DB1.DBX0.0 (front lidar obstacle bit)
+        #  CONTINUOUSLY monitors DB1.DBX1.5 (front lidar obstacle bit)
         #  Publishes on /lidar_obstacle (Bool) every poll cycle
         #  waypoint_navigator subscribes → ramps speed down/up
         TimerAction(period=30.0, actions=[
@@ -162,8 +162,8 @@ def generate_launch_description():
                     'rack':       0,
                     'slot':       1,
                     'plc_db':     1,        # DB number  → DB1
-                    'plc_byte':   0,        # byte offset → byte 0
-                    'plc_bit':    0,        # bit index  → bit 0  = DB1.DBX0.0
+                    'plc_byte':   1,        # byte offset → byte 1
+                    'plc_bit':    5,        # bit index  → bit 5  = DB1.DBX1.5
                     'poll_rate':  10.0,     # check 10 times/sec
                 }],
             ),
@@ -205,6 +205,18 @@ def generate_launch_description():
                 'save_interval':  8.0,
                 'max_pose_age':   720.0,
                 'restore_delay':  3.0,
+            }],
+        ),
+        # ── 9. Mission Publisher ───────────────────────────────────────
+        #  Publishes available missions in JSON format to /available_missions
+        #  for Web UI and fleet management
+        Node(
+            package='amr_pure_navigation',
+            executable='mission_publisher',
+            name='mission_publisher',
+            output='screen',
+            parameters=[{
+                'mission_path': missions_folder,
             }],
         ),
 

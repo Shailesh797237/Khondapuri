@@ -1,0 +1,102 @@
+# ================================================================
+#  st1.yaml
+#  Single node: station_1
+# ================================================================
+# st1
+waypoints:
+- x:           0.21
+  y:           0.2
+  theta:       6.230825
+  type:        station
+  mission:     forward
+  rotation:    auto
+  plc_feedback: "I0.4"
+
+# wa1
+- x:           9.22
+  y:           -0.28
+  theta:       6.222448
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+
+# st2
+
+- x:           16.18
+  y:           -0.7
+  theta:       6.2029
+  type:        station
+  mission:     forward
+  rotation:    auto  
+  plc_feedback: "I0.4"
+
+# wa2
+- x:           26.64
+  y:           -1.54
+  theta:       6.213721
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+
+#st3
+- x:           33.48
+  y:           -2.02
+  theta:       6.213721
+  type:        station
+  mission:     forward
+  rotation:    auto
+  plc_feedback: "I0.4"
+
+#reverse st3
+- x:           33.48
+  y:           -2.02
+  theta:       3.14
+  type:        station
+  mission:     forward
+  rotation:    auto
+  plc_feedback: "I0.4"
+
+
+#reverse wa2
+- x:           26.64
+  y:           -1.54
+  theta:       3.14
+  type:        waypoint
+  mission:     forward
+  rotation:    auto 
+
+#reverse sat2  
+- x:           16.18
+  y:           -0.7
+  theta:       3.14
+  type:        station
+  mission:     forward
+  rotation:    auto 
+  plc_feedback: "I0.4" 
+
+#reverse wa1
+- x:           9.22
+  y:           -0.28
+  theta:       3.14
+  type:        waypoint
+  mission:     forward
+  rotation:    auto
+
+#reverse st1
+- x:           0.21
+  y:           0.2
+  theta:       3.14
+  type:        station
+  mission:     forward
+  rotation:    auto
+  plc_feedback: "I0.4"
+
+
+
+- x:           0.21
+  y:           0.2
+  theta:       6.230825
+  type:        station
+  mission:     forward
+  rotation:    auto
+  plc_feedback: "I0.4"

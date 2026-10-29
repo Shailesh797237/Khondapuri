@@ -13,5 +13,5 @@ waypoints:
   type:        waypoint
   mission:     forward
   rotation:    auto
-  speed:       0.15
+  # speed:       0.15
 

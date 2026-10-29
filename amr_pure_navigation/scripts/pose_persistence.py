@@ -170,18 +170,15 @@ class PosePersistence(Node):
 
         self._publish_initial_pose(pose_data['x'], pose_data['y'], pose_data['qz'], pose_data['qw'])
         self.pose_restored = True
-        self.get_logger().info('🎯 Restored saved pose. Waiting for map & scan to verify...')
+        self.get_logger().info(f'🎯 Restored saved pose: x={pose_data["x"]:.3f}, y={pose_data["y"]:.3f}')
+        self._publish_status('POSE_RESTORED')
 
-        # Retry verification every 2s until map+scan are ready
-        self._verify_timer = self.create_timer(2.0, self.verify_and_relocalize_callback)
+        # [TEMPORARY] Verification and Phase 1, 2, 3 relocalization commented out
+        # self._verify_timer = self.create_timer(2.0, self.verify_and_relocalize_callback)
 
     def verify_and_relocalize_callback(self):
-        if self._verified:
-            if hasattr(self, '_verify_timer'):
-                self._verify_timer.cancel()
-            return
-
-        self._verify_attempts += 1
+        # [TEMPORARY] Scan-matching verification is disabled — using saved last pose only
+        return
 
         # Wait for data
         if self.latest_map is None or self.latest_scan is None:
@@ -245,10 +242,13 @@ class PosePersistence(Node):
         matched_beams = 0
 
         angle = scan.angle_min
-        stride = 3  # denser sampling for better accuracy
+        stride = 2  # denser sampling for better accuracy
 
         cos_yaw = math.cos(yaw)
         sin_yaw = math.sin(yaw)
+
+        # Tolerance in cells — ±2 cells (~6cm at 0.03m/cell)
+        tol = 2
 
         for i in range(0, len(scan.ranges), stride):
             r = scan.ranges[i]
@@ -267,9 +267,9 @@ class PosePersistence(Node):
 
                 if 0 <= gx < width and 0 <= gy < height:
                     matched = False
-                    # Tight 1-cell tolerance only (~3cm)
-                    for dx in range(-1, 2):
-                        for dy in range(-1, 2):
+                    # ±2-cell tolerance (~6cm at 0.03m resolution)
+                    for dx in range(-tol, tol + 1):
+                        for dy in range(-tol, tol + 1):
                             cx, cy = gx + dx, gy + dy
                             if 0 <= cx < width and 0 <= cy < height:
                                 if data[cy * width + cx] >= 50:
@@ -279,24 +279,7 @@ class PosePersistence(Node):
                             break
 
                     if matched:
-                        # Check beam doesn't pass through walls (ray-through-wall penalty)
-                        ray_blocked = False
-                        check_dist = min(r, 3.0)  # check up to 3m along ray
-                        step_m = res * 2  # check every 2 cells along ray
-                        for d in [step_m * s for s in range(1, int(check_dist / step_m))]:
-                            rlx = d * math.cos(angle)
-                            rly = d * math.sin(angle)
-                            rmx = px + cos_yaw * rlx - sin_yaw * rly
-                            rmy = py + sin_yaw * rlx + cos_yaw * rly
-                            rgx = int((rmx - ox) / res)
-                            rgy = int((rmy - oy) / res)
-                            if 0 <= rgx < width and 0 <= rgy < height:
-                                if data[rgy * width + rgx] >= 50:
-                                    ray_blocked = True
-                                    break
-                        if not ray_blocked:
-                            matched_beams += 1
-                    # else: on-map but no wall nearby = miss (valid but not matched)
+                        matched_beams += 1
                 # else: off-map = miss (valid but not matched)
 
             angle += scan.angle_increment * stride
@@ -308,7 +291,10 @@ class PosePersistence(Node):
     # ── Full Map 2-Phase Relocalization ───────────────────────────
 
     def perform_full_map_relocalization(self):
-        self.relocalizing = True
+        # [TEMPORARY] Full-map relocalization (Phase 1, 2, 3) is commented out
+        self.get_logger().info('ℹ️ Full-map relocalization (Phase 1, 2, 3) is temporarily disabled.')
+        self.relocalizing = False
+        return
 
         map_info = self.latest_map.info
         width = map_info.width
@@ -388,9 +374,36 @@ class PosePersistence(Node):
             self.get_logger().info(f'🎯 Phase 2 best: x={best_x:.3f}, y={best_y:.3f}, yaw={math.degrees(best_yaw):.1f}° (Score: {best_score*100.0:.1f}%)')
 
         # ════════════════════════════════════════════════════════
-        # Apply result
+        # PHASE 3: Ultra-fine refinement around Phase 2 result
+        #   Step: 0.03m spatial (1 cell), 2° angular, ±0.15m
         # ════════════════════════════════════════════════════════
-        if best_score >= self.match_threshold:
+        if best_score > 0.15:
+            uf_step = 0.03
+            uf_range = 0.15
+            uf_headings = [best_yaw + math.radians(d) for d in range(-10, 11, 2)]
+
+            uf_x = [best_x + i * uf_step for i in range(-int(uf_range/uf_step), int(uf_range/uf_step) + 1)]
+            uf_y = [best_y + i * uf_step for i in range(-int(uf_range/uf_step), int(uf_range/uf_step) + 1)]
+
+            self.get_logger().info(f'🔬 PHASE 3: Ultra-fine — {len(uf_x)}×{len(uf_y)}×{len(uf_headings)} = {len(uf_x)*len(uf_y)*len(uf_headings)} candidates')
+
+            for x in uf_x:
+                for y in uf_y:
+                    for yaw in uf_headings:
+                        score = self.compute_scan_match_score(x, y, yaw)
+                        if score is not None and score > best_score:
+                            best_score = score
+                            best_x, best_y, best_yaw = x, y, yaw
+
+            self.get_logger().info(f'🎯 Phase 3 best: x={best_x:.3f}, y={best_y:.3f}, yaw={math.degrees(best_yaw):.1f}° (Score: {best_score*100.0:.1f}%)')
+
+        # ════════════════════════════════════════════════════════
+        # Apply result — grid search uses lower threshold (30%)
+        # since scan-match can't achieve scores as high as when
+        # the robot is already near the correct pose
+        # ════════════════════════════════════════════════════════
+        grid_accept_threshold = self.match_threshold * 0.65  # ~30%
+        if best_score >= grid_accept_threshold:
             qz = math.sin(best_yaw / 2.0)
             qw = math.cos(best_yaw / 2.0)
             self._publish_initial_pose(best_x, best_y, qz, qw)
@@ -403,7 +416,7 @@ class PosePersistence(Node):
             self.get_logger().info('═══════════════════════════════════════════')
             self._publish_status(f'RELOCALIZED x={best_x:.2f} y={best_y:.2f} score={best_score*100.0:.0f}%')
         else:
-            self.get_logger().warn(f'⚠ Full map search best score only {best_score*100.0:.1f}%. Falling back to AMCL 15k global...')
+            self.get_logger().warn(f'⚠ Full map search best score only {best_score*100.0:.1f}% (need {grid_accept_threshold*100:.0f}%). Falling back to AMCL 15k global...')
             if self.global_loc_client.wait_for_service(timeout_sec=1.0):
                 self.global_loc_client.call_async(Empty.Request())
                 self.get_logger().info('⚡ AMCL 15k particle global relocalization triggered!')

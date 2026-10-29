@@ -13,6 +13,8 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs      REQUIRED)
 find_package(sensor_msgs   REQUIRED)
 find_package(std_msgs      REQUIRED)
+find_package(tf2_ros       REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(yaml-cpp      REQUIRED)
 
 # ── Find snap7 (installed from source to /usr/local) ─────────────
@@ -56,7 +58,7 @@ add_executable(waypoint_navigator
 )
 target_include_directories(waypoint_navigator PUBLIC ${PKG_INCLUDE})
 ament_target_dependencies(waypoint_navigator
-  rclcpp geometry_msgs nav_msgs sensor_msgs std_msgs)
+  rclcpp geometry_msgs nav_msgs sensor_msgs std_msgs tf2_ros tf2_geometry_msgs)
 target_link_libraries(waypoint_navigator yaml-cpp)
 
 # ── 2. AMR Teleop ─────────────────────────────────────────────────
@@ -161,6 +163,13 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
   RENAME pose_persistence
 )
+
+install(PROGRAMS
+  scripts/mission_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME mission_publisher
+)
+
 
 ament_package()
 

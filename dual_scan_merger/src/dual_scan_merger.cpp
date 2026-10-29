@@ -30,18 +30,20 @@ public:
     back_yaw_offset_  = this->declare_parameter<double>("back_yaw_offset", -2.3562);     // -135°
 
     // Sensor XY positions relative to base_link (from URDF joint xyz)
-    front_sensor_x_ = this->declare_parameter<double>("front_sensor_x",  0.35536);
-    front_sensor_y_ = this->declare_parameter<double>("front_sensor_y",  0.28336);
-    back_sensor_x_  = this->declare_parameter<double>("back_sensor_x",  -0.35538);
-    back_sensor_y_  = this->declare_parameter<double>("back_sensor_y",  -0.28336);
+    front_sensor_x_ = this->declare_parameter<double>("front_sensor_x",  0.690);
+    front_sensor_y_ = this->declare_parameter<double>("front_sensor_y",  0.395);
+    back_sensor_x_  = this->declare_parameter<double>("back_sensor_x",  -0.690);
+    back_sensor_y_  = this->declare_parameter<double>("back_sensor_y",  -0.395);
 
     // Max scan distance
     max_allowed_range_ = this->declare_parameter<double>("max_allowed_range", 20.0);
 
     // Minimum range to filter robot body hits (distance from base_link origin)
-    robot_body_radius_ = this->declare_parameter<double>("robot_body_radius", 0.45);
+    robot_body_radius_ = this->declare_parameter<double>("robot_body_radius", 0.55);
 
-    scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(output_topic_, 10);
+    rclcpp::QoS pub_qos(1);
+    pub_qos.reliable();
+    scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(output_topic_, pub_qos);
 
     front_sub_.subscribe(this, front_topic_);
     back_sub_.subscribe(this, back_topic_);

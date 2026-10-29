@@ -346,6 +346,7 @@ void TcpMissionBridge::navStatusCallback(const std_msgs::msg::String::SharedPtr 
   const std::string & data = msg->data;
 
   if (data.find("RUNNING:") != std::string::npos || data.find("STARTED:") != std::string::npos) {
+    has_reached_sent_ = false;
     if (!is_running_sent_) {
       sendToClient("running");
       is_running_sent_ = true;

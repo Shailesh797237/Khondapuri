@@ -1,0 +1,15 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Colcon / ROS build artifacts
+build/
+install/
+log/
+
+# OS and Editor temporary files
+*.swp
+*~
+.DS_Store

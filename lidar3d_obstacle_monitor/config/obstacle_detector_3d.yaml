@@ -1,0 +1,61 @@
+# ================================================================
+#  obstacle_detector_3d.yaml
+#
+#  Configuration for the 3D obstacle detector node.
+#
+#  This node loads a .pcd map and compares it against live
+#  point cloud data to detect dynamic obstacles at ALL heights,
+#  especially overhead obstacles that 2D scans cannot see.
+#
+#  TUNE THESE VALUES for your environment!
+# ================================================================
+
+obstacle_detector_3d:
+  ros__parameters:
+
+    # ── Map & Topics ────────────────────────────────────────────
+    pcd_map_path:     "/home/taikisha/turn_ws/scans.pcd"
+    live_cloud_topic: "/livox/lidar"    # Livox Mid-360 output
+    robot_frame:      "base_link"       # robot base frame
+    map_frame:        "map"             # AMCL map frame
+
+    # ── OcTree Resolution ───────────────────────────────────────
+    # Smaller = more accurate but slower + more memory
+    # 0.10–0.15m is a good balance for indoor environments
+    octree_resolution: 0.15    # meters (voxel size)
+
+    # ── Detection Zone ──────────────────────────────────────────
+    # How far around the robot to check for obstacles
+    detection_radius:  2.0     # meters (lateral)
+    forward_distance:  3.0     # meters (ahead of robot)
+
+    # ── Height Filtering ────────────────────────────────────────
+    # Heights are relative to base_link (robot ground plane)
+    #
+    # min_ground_height:   Points below this are ground → ignore
+    # min_overhead_height: Points above this = overhead obstacle
+    # max_overhead_height: Don't check above this (ceiling noise)
+    #
+    # Your pointcloud_to_laserscan uses max_height: 1.0m
+    # So the 2D scan already covers 0–1m.
+    # The 3D detector should cover what the 2D scan MISSES:
+    min_ground_height:   0.15   # ignore below 15cm (ground)
+    min_overhead_height: 1.0    # above 1m = overhead (2D scan doesn't see this!)
+    max_overhead_height: 4.0    # ceiling limit
+
+    # ── Sensitivity ─────────────────────────────────────────────
+    # How many "new" points (not in known map) trigger an obstacle
+    # Lower = more sensitive but more false positives
+    # Higher = less sensitive but fewer false alarms
+    min_obstacle_points: 10
+
+    # ── Processing Rate ─────────────────────────────────────────
+    # How often to check for obstacles (Hz)
+    # Don't set too high — OcTree search is CPU-intensive
+    check_rate: 5.0    # 5 Hz = every 200ms
+
+    # ── Match Tolerance ─────────────────────────────────────────
+    # Radius to search when matching live point → known map
+    # If no known point within this radius → point is "new"
+    # Should be ≥ octree_resolution to avoid false positives
+    voxel_neighbor_radius: 0.20

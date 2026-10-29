@@ -41,10 +41,11 @@ amcl:
     recovery_alpha_fast: 0.1    # fast average weight decay
     # When fast avg << slow avg, random particles are injected → helps recover
 
-    # Update thresholds — set to 0.0 so AMCL processes scans even while STATIONARY
-    # This is CRITICAL: without this, AMCL ignores all laser scans until robot moves!
-    update_min_d: 0.0           # process scans even without translation
-    update_min_a: 0.0           # process scans even without rotation
+    # Update thresholds — AMCL corrects map→odom TF periodically (every 25cm / 11°)
+    # Navigator now uses TF lookup (map→base_link) for real-time pose,
+    # so AMCL updates won't cause jitter — they just correct drift.
+    update_min_d: 0.25          # correct drift every 25cm
+    update_min_a: 0.20          # correct drift every 11.5°
     resample_interval: 1
 
     # Sensor model weights

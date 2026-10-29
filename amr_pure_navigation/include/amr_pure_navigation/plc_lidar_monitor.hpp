@@ -4,10 +4,10 @@
 //
 //  PLC Lidar Obstacle Monitor — CONTINUOUS bit publishing.
 //
-//  Reads DB1.DBX0.0 (front lidar obstacle signal from PLC) at
+//  Reads DB1.DBX1.5 (front lidar obstacle signal from PLC) at
 //  poll_rate Hz and publishes the value on /lidar_obstacle (Bool).
 //
-//  When the front lidar detects an obstacle, the PLC sets DB1.DBX0.0
+//  When the front lidar detects an obstacle, the PLC sets DB1.DBX1.5
 //  to TRUE. The waypoint_navigator subscribes and ramps speed down.
 //
 //  Parameters:
@@ -15,8 +15,8 @@
 //    rack        : PLC rack              (default: 0)
 //    slot        : PLC slot              (default: 1)
 //    plc_db      : DB number to read     (default: 1)
-//    plc_byte    : byte offset in DB     (default: 0)
-//    plc_bit     : bit index (0-7)       (default: 0)  → DB1.DBX0.0
+//    plc_byte    : byte offset in DB     (default: 1)
+//    plc_bit     : bit index (0-7)       (default: 5)  → DB1.DBX1.5
 //    poll_rate   : polling rate Hz        (default: 10.0)
 // ================================================================
 
@@ -70,13 +70,13 @@ private:
   // Last known bit value (for change-of-state logging)
   bool        last_bit_value_   {false};
 
-  // PLC address to monitor  (DB1.DBX0.0)
+  // PLC address to monitor  (DB1.DBX1.5)
   std::string plc_ip_       {"192.168.1.21"};
   int         rack_         {0};
   int         slot_         {1};
   int         plc_db_       {1};     // DB number
-  int         plc_byte_     {0};     // byte offset
-  int         plc_bit_      {0};     // bit index (0.0 = byte 0, bit 0)
+  int         plc_byte_     {1};     // byte offset
+  int         plc_bit_      {5};     // bit index (1.5 = byte 1, bit 5)
   double      poll_rate_hz_ {10.0};  // how often to check (10 Hz)
 };
 

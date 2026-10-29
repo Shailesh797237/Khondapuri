@@ -1,0 +1,41 @@
+# ================================================================
+#  ndt_localizer.yaml — 3D NDT Localizer Parameters
+# ================================================================
+
+ndt_localizer:
+  ros__parameters:
+
+    # ── Map & Topics ────────────────────────────────────────────
+    pcd_map_path:     "/home/taikisha/turn_ws/scans.pcd"
+    live_cloud_topic: "/livox/lidar"
+    robot_frame:      "base_link"
+    map_frame:        "map"
+
+    # ── NDT Algorithm ───────────────────────────────────────────
+    ndt_resolution:     1.0      # grid cell size (meters) — larger=faster, smaller=precise
+    ndt_step_size:      0.1      # optimization step size
+    ndt_epsilon:        0.01     # convergence threshold
+    ndt_max_iterations: 30       # max iterations per match
+
+    # ── Scan Processing ─────────────────────────────────────────
+    scan_voxel_size:  0.3        # downsample live cloud (meters)
+    map_voxel_size:   0.2        # downsample map (meters)
+    match_rate:       2.0        # Hz — run NDT this often
+
+    # ── Drift Correction ────────────────────────────────────────
+    drift_xy_threshold:      0.55   # meters — only correct AMCL if drift > 55cm (prevents scan jumps while driving)
+    drift_yaw_threshold:     0.25   # radians (~14.3°) — correct if yaw drift > this
+    good_fitness_threshold:  3.5    # NDT score below this = trusted match (triggers AMCL correction)
+    bad_fitness_threshold:   6.0    # NDT score above this = rejected (unmatched environment)
+    min_correction_interval: 5.0    # seconds — don't spam /initialpose while driving
+
+    # ── Live Map Accumulation ───────────────────────────────────
+    # Continuously builds the 3D map during navigation using a 
+    # persistent multi-observation filter to prevent noise/ghosting.
+    map_accumulate_enabled:        true   # enable/disable live map building
+    accumulate_require_stopped:    true   # only accumulate when robot is STOPPED (prevents rotational blur)
+    accumulate_require_consistent: true   # only accumulate when NDT pose is confirmed consistent
+    min_accum_observations:        10     # voxel MUST be observed across 10 scan cycles to be saved in .pcd
+    accumulate_interval:           10     # process candidate buffer every N good NDT matches
+    map_save_interval:             5      # save to disk every N merges (~every 25 sec)
+    map_accumulate_voxel:          0.15   # voxel size for candidate map (meters)

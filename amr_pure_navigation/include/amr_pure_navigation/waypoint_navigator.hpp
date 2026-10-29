@@ -20,6 +20,9 @@
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include <yaml-cpp/yaml.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 namespace amr_pure_navigation
 {
@@ -99,6 +102,10 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr                          queue_missions_sub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr                             queue_status_pub_;
   rclcpp::TimerBase::SharedPtr                                                   timer_;
+
+  // ── TF2 for map→base_link lookup ───────────────────────────────
+  std::shared_ptr<tf2_ros::Buffer>            tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   // ── Robot pose ────────────────────────────────────────────────
   double robot_x_          {0.0};

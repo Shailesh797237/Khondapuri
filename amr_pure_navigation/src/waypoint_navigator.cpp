@@ -145,6 +145,10 @@ WaypointNavigator::WaypointNavigator(const rclcpp::NodeOptions & options)
   }
   RCLCPP_INFO(get_logger(), "=============================================");
 
+  // ── TF2 buffer for map→base_link pose lookup ───────────────────
+  tf_buffer_   = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
   cmd_vel_pub_      = create_publisher<geometry_msgs::msg::Twist>(cmd_vel_topic_, 10);
   status_pub_       = create_publisher<std_msgs::msg::String>("/nav_status",       10);
   station_pub_      = create_publisher<std_msgs::msg::String>("/station_reached", 10);
@@ -442,15 +446,24 @@ void WaypointNavigator::amclCallback(
 void WaypointNavigator::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
   if (init_failed_) return;
-  if (use_amcl_ && pose_received_) return;
 
-  robot_x_   = msg->pose.pose.position.x;
-  robot_y_   = msg->pose.pose.position.y;
-  robot_yaw_ = quaternionToYaw(msg->pose.pose.orientation);
+  // Use TF to get pose in MAP frame (combines AMCL map→odom + EKF odom→base_link)
+  try {
+    auto tf = tf_buffer_->lookupTransform("map", "base_link", tf2::TimePointZero);
+    robot_x_   = tf.transform.translation.x;
+    robot_y_   = tf.transform.translation.y;
+    robot_yaw_ = quaternionToYaw(tf.transform.rotation);
+  } catch (const tf2::TransformException &) {
+    // TF not ready yet — use raw EKF odom as fallback
+    robot_x_   = msg->pose.pose.position.x;
+    robot_y_   = msg->pose.pose.position.y;
+    robot_yaw_ = quaternionToYaw(msg->pose.pose.orientation);
+  }
 
   if (!pose_received_) {
     pose_received_ = true;
-    RCLCPP_INFO(get_logger(), "✅ Odom active! x=%.2f y=%.2f", robot_x_, robot_y_);
+    RCLCPP_INFO(get_logger(), "✅ Odom active (TF map→base_link)! x=%.2f y=%.2f yaw=%.1f°",
+      robot_x_, robot_y_, robot_yaw_ * 180.0 / M_PI);
     if (max_cycles_ != 0 && state_ == State::IDLE)
       state_ = State::ROTATE_TO_HEADING;
   }
@@ -1100,10 +1113,12 @@ void WaypointNavigator::queueMissionsCallback(const std_msgs::msg::String::Share
   }
 
   // ── Skip starting waypoint if robot is already standing at/near it ──
-  // Prevents turning around to visit a waypoint that the robot is already at or slightly past.
+  // Prevents turning around to visit a transit waypoint that the robot is already at or slightly past.
+  // BUT do NOT skip if the start waypoint has plc_feedback (needs to wait for PLC trigger!).
   if (pose_received_ && waypoints_.size() > 1) {
     double dist_to_start = std::hypot(waypoints_.front().x - robot_x_, waypoints_.front().y - robot_y_);
-    if (dist_to_start < 1.5) {
+    bool start_requires_plc = (waypoints_.front().type == "station" && !waypoints_.front().plc_feedback.empty());
+    if (dist_to_start < 1.5 && !start_requires_plc) {
       RCLCPP_INFO(get_logger(),
         "  ⏭ Skipping start WP '%s' (%.2f, %.2f) — robot already at start location (dist=%.2fm)",
         waypoint_mission_names_.front().c_str(), waypoints_.front().x, waypoints_.front().y, dist_to_start);
@@ -1113,11 +1128,13 @@ void WaypointNavigator::queueMissionsCallback(const std_msgs::msg::String::Share
   }
 
   // ── Override intermediate station waypoints to "waypoint" pass-through ──
-  // Only the FINAL destination in a multi-waypoint route acts as a station stop.
-  // All intermediate waypoints along the route pass through smoothly without pausing for PLC.
-  if (waypoints_.size() > 1) {
+  // ONLY for automatic range routes (e.g. "tag1 to tag5") where intermediate tags
+  // have NO plc_feedback specified.
+  // Any waypoint with plc_feedback MUST remain a "station" so it stops, aligns, and waits for PLC.
+  // In single-mission files (like st1.yaml), explicit station types are preserved.
+  if (is_range_cmd && waypoints_.size() > 1) {
     for (size_t i = 0; i < waypoints_.size() - 1; ++i) {
-      if (waypoints_[i].type == "station") {
+      if (waypoints_[i].type == "station" && waypoints_[i].plc_feedback.empty()) {
         RCLCPP_INFO(get_logger(),
           "  🔄 Intermediate WP[%zu] '%s' converted station → waypoint (pass-through mode)",
           i, waypoint_mission_names_[i].c_str());
@@ -1572,29 +1589,26 @@ void WaypointNavigator::controlLoop()
     // ════════════════════════════════════════════════════════════
     case State::WAYPOINT_DONE:
     {
-      // If this is a "station" type AND plc_enabled → notify PLC bridge
-      if (plc_enabled_ && wp.type == "station") {
+      // If this is a "station" type AND plc_enabled AND plc_feedback is specified → notify PLC monitor
+      if (plc_enabled_ && wp.type == "station" && !wp.plc_feedback.empty()) {
         std::string station_name = !wp.name.empty()
           ? wp.name
           : (wp_index_ < waypoint_mission_names_.size() ? waypoint_mission_names_[wp_index_] : ("station_" + std::to_string(wp_index_)));
 
         RCLCPP_INFO(get_logger(),
-          "[WP%zu] 🏭 STATION [%s] plc_feedback=%s → sending command to PLC",
-          wp_index_, station_name.c_str(),
-          wp.plc_feedback.empty() ? "none" : wp.plc_feedback.c_str());
+          "[WP%zu] 🏭 STATION [%s] plc_feedback=%s → waiting for PLC trigger",
+          wp_index_, station_name.c_str(), wp.plc_feedback.c_str());
 
-        // Publish "STATION_A:I0.0" so plc_bridge knows which input to wait for
-        // Format: "name:wait_input"  or just "name" if no wait_input
+        // Publish "name:wait_input" (e.g. "station_4:I0.4") so plc_station_monitor knows which input to monitor
         std_msgs::msg::String smsg;
-        smsg.data = wp.plc_feedback.empty()
-          ? station_name
-          : station_name + ":" + wp.plc_feedback;
+        smsg.data = station_name + ":" + wp.plc_feedback;
         station_pub_->publish(smsg);
 
-        // Enter WAIT_PLC state — robot stays stopped until /plc_done
-        plc_done_        = false;
-        waiting_for_plc_ = true;
-        state_           = State::WAIT_PLC;
+        // Enter WAIT_PLC state — robot stays stopped until /plc_done or /plc_trigger
+        plc_done_          = false;
+        plc_trigger_value_ = false;  // Reset stale trigger before waiting
+        waiting_for_plc_   = true;
+        state_             = State::WAIT_PLC;
         stopRobot();
         break;
       }
@@ -1645,6 +1659,8 @@ void WaypointNavigator::controlLoop()
         if (wp_index_ < waypoints_.size()) {
           state_ = State::ROTATE_TO_HEADING;
           const Waypoint & nwp = waypoints_[wp_index_];
+          std::string cur_name = (wp_index_ < waypoint_mission_names_.size()) ? waypoint_mission_names_[wp_index_] : "";
+          publishStatus("RUNNING: " + cur_name);
           RCLCPP_INFO(get_logger(), "─────────────────────────────────────────");
           RCLCPP_INFO(get_logger(),
             "→ WP[%zu/%zu] [%s/%s]  x=%.2f y=%.2f theta=%.1f°",

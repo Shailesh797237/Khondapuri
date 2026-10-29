@@ -1,0 +1,17 @@
+/**:
+  ros__parameters:
+    # Siemens PLC Network Configuration
+    plc_ip: "192.168.1.21"
+    plc_rack: 0
+    plc_slot: 1
+
+    # Communication Settings
+    poll_rate_ms: 100
+    reconnect_interval_sec: 2.0
+    topic_prefix: "/plc"
+    publish_raw_db: false
+
+    # PLC DB Numbers
+    db_safety_no: 1
+    db_actuator_no: 3
+    db_actuator_size: 3

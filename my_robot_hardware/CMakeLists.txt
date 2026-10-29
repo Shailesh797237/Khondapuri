@@ -27,6 +27,7 @@ pkg_check_modules(MODBUS REQUIRED libmodbus)
 # =====================
 add_library(my_robot_hardware SHARED
   src/mobile_base_hardware_interface.cpp
+  src/plc_sto_handler.cpp
 )
 
 target_include_directories(my_robot_hardware

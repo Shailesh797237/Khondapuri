@@ -45,8 +45,25 @@ def generate_launch_description():
         output='screen',
     )
 
+    # 4. Static TF: base_link -> livox_frame
+    #    CRITICAL: Without this, pointcloud_to_laserscan cannot transform
+    #    the Livox cloud into the robot frame, causing scan to rotate with robot!
+    livox_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='livox_tf_publisher',
+        arguments=[
+            '0', '0', '0.334',     # x y z offset from base_link
+            '0', '0', '0',         # roll pitch yaw
+            'base_link',
+            'livox_frame'
+        ],
+        output='screen',
+    )
+
     return LaunchDescription([
         livox_driver,
+        livox_tf,
         pointcloud_to_laserscan_node,
         scan_qos_bridge,
     ])

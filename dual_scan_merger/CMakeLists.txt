@@ -43,10 +43,22 @@ ament_target_dependencies(tf_scan_merger
   pcl_ros
 )
 
-# -------- Install Both Nodes --------
+# -------- Triple Scan Merger (Livox 3D + 2x SICK 2D) --------
+add_executable(triple_scan_merger src/triple_scan_merger.cpp)
+
+ament_target_dependencies(triple_scan_merger
+  rclcpp
+  sensor_msgs
+  tf2
+  tf2_ros
+  tf2_sensor_msgs
+)
+
+# -------- Install All Nodes --------
 install(TARGETS
   dual_scan_merger
   tf_scan_merger
+  triple_scan_merger
   DESTINATION lib/${PROJECT_NAME}
 )
 

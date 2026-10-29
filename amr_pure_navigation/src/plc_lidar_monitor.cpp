@@ -6,7 +6,7 @@
 //
 //  ALWAYS:
 //    - Connects to PLC at startup
-//    - Polls DB1.DBX0.0 (configurable) at poll_rate Hz
+//    - Polls DB1.DBX1.5 (configurable) at poll_rate Hz
 //    - Publishes bit value on /lidar_obstacle (Bool) every poll cycle
 //      → waypoint_navigator subscribes and ramps speed down/up
 //
@@ -15,8 +15,8 @@
 //    rack        : PLC rack              (default: 0)
 //    slot        : PLC slot              (default: 1)
 //    plc_db      : DB number to read     (default: 1)
-//    plc_byte    : byte offset in DB     (default: 0)
-//    plc_bit     : bit index (0-7)       (default: 0)  → DB1.DBX0.0
+//    plc_byte    : byte offset in DB     (default: 1)
+//    plc_bit     : bit index (0-7)       (default: 5)  → DB1.DBX1.5
 //    poll_rate   : polling rate Hz        (default: 10.0)
 //
 //  Topics published:
@@ -26,7 +26,7 @@
 //  Usage:
 //    ros2 run amr_pure_navigation plc_lidar_monitor \
 //      --ros-args -p plc_ip:=192.168.1.21 -p plc_db:=1 \
-//      -p plc_byte:=0 -p plc_bit:=0
+//      -p plc_byte:=1 -p plc_bit:=5
 // ================================================================
 
 #include "amr_pure_navigation/plc_lidar_monitor.hpp"
@@ -45,8 +45,8 @@ PlcLidarMonitor::PlcLidarMonitor(const rclcpp::NodeOptions & options)
   declare_parameter<int>        ("rack",      0);
   declare_parameter<int>        ("slot",      1);
   declare_parameter<int>        ("plc_db",    1);
-  declare_parameter<int>        ("plc_byte",  0);
-  declare_parameter<int>        ("plc_bit",   0);
+  declare_parameter<int>        ("plc_byte",  1);
+  declare_parameter<int>        ("plc_bit",   5);
   declare_parameter<double>     ("poll_rate", 10.0);
 
   get_parameter("plc_ip",    plc_ip_);
